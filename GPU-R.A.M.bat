@@ -1,16 +1,27 @@
-@echo off
-setlocal EnableDelayedExpansion
-chcp 65001 >nul
-title BETA - OTIMIZACAO TOTAL
-
 :: ==================== AUTO UPDATE (CORRIGIDO) ====================
 echo.
 echo Verificando atualizacoes...
 
 set "RAW_URL=https://raw.githubusercontent.com/ramialcantara44-afk/CFBETAS/refs/heads/main/GPU-R.A.M.bat"
+
+powershell -Command "(New-Object System.Net.WebClient).DownloadFile('%RAW_URL%?v=%random%', '%temp%\GPU_new.bat')" >nul 2>&1
+
+if exist "%temp%\GPU_new.bat" (
+    fc "%~f0" "%temp%\GPU_new.bat" >nul 2>&1
+    if errorlevel 1 (
+        echo Nova versao encontrada! Atualizando...
+        copy /y "%temp%\GPU_new.bat" "%~dp0GPU-R.A.M.bat" >nul
+        del "%temp%\GPU_new.bat" >nul 2>&1
+        echo Atualizado!
+        timeout /t 2 >nul
+        start "" "%~dp0GPU-R.A.M.bat"
+        
+        exit
+    ) else (
+        del "%temp%\GPU_new.bat" >nul 2>&1
+    )
 )
 :: ====================================================
-
 :: --- RESTO DO CODIGO ---
 for /F %%a in ('echo prompt $E ^| cmd') do set "esc=%%a"
 
