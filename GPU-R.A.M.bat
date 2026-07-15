@@ -5,7 +5,7 @@ title BETA - OTIMIZACAO TOTAL
 
 :: ==================== AUTO UPDATE ====================
 :: TROQUE A LINHA ABAIXO com a URL do seu GitHub depois de subir o arquivo
-set "https://raw.githubusercontent.com/ramialcantara44-afk/CFBETAS/refs/heads/main/GPU-R.A.M.bat"
+set "RAW_URL=https://raw.githubusercontent.com/ramialcantara44-afk/CFBETAS/refs/heads/main/GPU-R.A.M.bat"
 
 echo.
 echo Verificando atualizacoes...
