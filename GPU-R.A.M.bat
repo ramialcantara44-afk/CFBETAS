@@ -15,8 +15,7 @@ if exist "%temp%\GPU_new.bat" (
     fc "%~f0" "%temp%\GPU_new.bat" >nul 2>&1
     if errorlevel 1 (
         echo Nova versao encontrada! Atualizando...
-        copy /y "%temp%\GPU_new.bat" "%~dp0GPU-R.A.M.bat" >nul
-        del "%temp%\GPU_new.bat" >nul 2>&1
+       move /y "%temp%\GPU_new.bat" "%~dp0GPU-R.A.M.bat" >nul
         echo Atualizado!
         timeout /t 2 >nul
         start "" "%~dp0GPU-R.A.M.bat"
