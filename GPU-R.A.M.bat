@@ -19,12 +19,17 @@ if exist "%temp%\VERSAO_ATUAL.txt" (
 :: --- RESTO DO CODIGO ---
 for /F %%a in ('echo prompt $E ^| cmd') do set "esc=%%a"
 
-:: --- ANIMACAO DE ABERTURA ---
+:: --- ANIMACAO DE ABERTURA CORRIGIDA ---
+@echo off
+setlocal EnableDelayedExpansion
+:: Define o caractere de escape (necessário para cores)
+for /F %%a in ('echo prompt $E ^| cmd') do set "esc=%%a"
+
 cls
 for /L %%i in (1,1,6) do (
-    set /a "r=%random% %% 255"
-    set /a "g=%random% %% 255"
-    set /a "b=%random% %% 255"
+    set /a "r=!random! %% 255"
+    set /a "g=!random! %% 255"
+    set /a "b=!random! %% 255"
     echo.
     echo             %esc%[38;2;!r!;!g!;!b%m%     DESCARREGANDO MODULO... [%%i/6] %esc%[0m
     timeout /t 1 >nul
