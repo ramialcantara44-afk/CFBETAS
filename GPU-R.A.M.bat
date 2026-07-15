@@ -55,7 +55,7 @@ echo %rgb%                           ██╔══██╗████╗ █
 echo %rgb%                           ███████║██╔██╗██║   ██║   ██║ ██║  ███╗███████║%reset%
 echo %rgb%                           ██╔══██║██║╚████║   ██║   ██║ ██║   ██║██╔══██║%reset%
 echo %rgb%                           ██║  ██║██║ ╚███║   ██║   ██║ ╚██████╔╝██║  ██║%reset%
-echo %rgb%                           ╚═╝  ╚═╝╚═╝  ╚═══╝   ╚═╝   ╚═╝  ╚═════╝ ╚═╝  ╚═╝%reset%
+echo %rgb%                           ╚═╝  ╚═╝╚═╝  ╚═══╝   ╚═╝   ╚═╝  ╚═════╝ ╚═╝  ╚═╝mente%reset%
 echo.
 echo %rgb%                           COPYRIGHT (C) 2026. TODOS OS DIREITOS RESERVADOS.%reset%
 echo.
