@@ -131,11 +131,15 @@ goto :MENU
 cls
 echo %rgb%    APLICANDO OTIMIZACOES PROFUNDAS... %reset%
 
-:: --- Ajustes de Energia e CPU ---
+:: --- Ajustes de Energia e CPU (Throttling desativado) ---
 powercfg -setacvalueindex SCHEME_CURRENT SUB_PROCESSOR PROCTHROTTLEMAX 100
 powercfg -setacvalueindex SCHEME_CURRENT SUB_PROCESSOR PROCTHROTTLEMIN 100
+powercfg -setacvalueindex SCHEME_CURRENT SUB_PROCESSOR IDLEDISABLE 1
 powercfg /setactive SCHEME_MIN
 powercfg -h off
+
+:: --- Desativacao do Hyper-V (Reducao de latencia) ---
+bcdedit /set hypervisorlaunchtype off
 
 :: --- Desativacao de Servicos ---
 sc stop "WSearch" & sc config "WSearch" start=disabled
@@ -148,10 +152,10 @@ reg add "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Session Manager\Mem
 reg add "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Multimedia\SystemProfile" /v NetworkThrottlingIndex /t REG_DWORD /d 0xFFFFFFFF /f
 reg add "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Multimedia\SystemProfile" /v SystemResponsiveness /t REG_DWORD /d 0 /f
 
-:: --- Otimizacao de Rede (Adaptadores) ---
+:: --- Otimizacao de Rede ---
 powershell -Command "Get-NetAdapterAdvancedProperty | Where-Object {$_.DisplayName -like '*Power Saving*'} | Set-NetAdapterAdvancedProperty -DisplayValue 'Disabled' -ErrorAction SilentlyContinue" >nul 2>&1
 
-:: --- Remocao de Apps (Limpeza) ---
+:: --- Limpeza de Apps ---
 powershell -Command "Get-AppxPackage *news* | Remove-AppxPackage; Get-AppxPackage *officehub* | Remove-AppxPackage; Get-AppxPackage *3dbuilder* | Remove-AppxPackage"
 
 :: --- Reinicio do Explorer ---
@@ -159,6 +163,8 @@ taskkill /f /im explorer.exe >nul 2>&1
 start "" "%windir%\explorer.exe"
 
 echo %esc%[38;2;0;255;0m OTIMIZACAO PROFUNDA CONCLUIDA! %reset%
+echo.
+echo %esc%[38;2;255;0;0m REINICIE O COMPUTADOR PARA APLICAR AS MUDANCAS DO HYPER-V %reset%
 pause
 goto :MENU
 
