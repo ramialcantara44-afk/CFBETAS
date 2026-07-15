@@ -37,23 +37,22 @@ for /L %%i in (1,1,6) do (
 )
 
 :MENU
-:: Gera as cores aleatorias
-set /a "r=%random% %% 255"
-set /a "g=%random% %% 255"
-set /a "b=%random% %% 255"
-set "rgb=%esc%[38;2;%r%;%g%;%b%m"
-set "reset=%esc%[0m"
-
 cls
-::
-echo.
-echo %rgb%            ███████ ████╗ ██╗████████╗██╗  ██████╗  █████╗
-echo %rgb%            ██╔══██╗████╗ ██║╚══██╔══╝██║ ██╔════╝ ██╔══██╗
-echo %rgb%            ███████║██╔██╗██║   ██║   ██║ ██║  ███╗███████║
-echo %rgb%            ██╔══██║██║╚████║   ██║   ██║ ██║   ██║██╔══██║
-echo %rgb%            ██║  ██║██║ ╚███║   ██║   ██║ ╚██████╔╝██║  ██║
-echo %rgb%            ╚═╝  ╚═╝╚═╝  ╚══╝   ╚═╝   ╚═╝  ╚═════╝ ╚═╝  ╚═╝%reset%
-echo.
+echo %rgb%
+echo            ███████ ████╗ ██╗████████╗██╗  ██████╗  █████╗
+echo            ██╔══██╗████╗ ██║╚══██╔══╝██║ ██╔════╝ ██╔══██╗
+echo            ███████║██╔██╗██║   ██║   ██║ ██║  ███╗███████║
+echo            ██╔══██║██║╚████║   ██║   ██║ ██║   ██║██╔══██║
+echo            ██║  ██║██║ ╚███║   ██║   ██║ ╚██████╔╝██║  ██║
+echo            ╚═╝  ╚═╝╚═╝  ╚══╝   ╚═╝   ╚═╝  ╚═════╝ ╚═╝  ╚═╝
+echo %reset%
+echo ==================================================
+echo [1] OTIMIZAR (PROFUNDO)
+echo [2] CRIAR PONTO DE RESTAURACAO
+echo [3] ABRIR CROSSFIRE AL
+echo [4] GERENCIAR DXVK (VULKAN)
+echo [5] SAIR
+echo ==================================================
 set /p opt="Escolha uma opcao: "
 
 if "%opt%"=="1" goto :OTIMIZAR
@@ -61,6 +60,33 @@ if "%opt%"=="2" goto :PONTO_RESTAURACAO
 if "%opt%"=="3" goto :ABRIR_CF
 if "%opt%"=="4" goto :GERENCIAR_DXVK
 if "%opt%"=="5" exit
+goto :MENU
+
+:OTIMIZAR
+cls
+echo %rgb%APLICANDO OTIMIZACOES... AGUARDE...%reset%
+:: --- [BLOCOS DE OTIMIZACAO INTEGRADOS] ---
+powercfg -h off
+bcdedit /set hypervisorlaunchtype off
+reg add "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management" /v LargeSystemCache /t REG_DWORD /d 1 /f
+reg add "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management" /v IoPageLockLimit /t REG_DWORD /d 0x000F4240 /f
+reg add "HKEY_CURRENT_USER\Control Panel\Mouse" /v MouseSpeed /t REG_SZ /d 0 /f
+for %%s in (WSearch SysMain DiagTrack wuauserv bits DoSvc) do (sc stop "%%s" >nul 2>&1 & sc config "%%s" start= disabled >nul 2>&1)
+echo %rgb%OTIMIZACAO CONCLUIDA COM SUCESSO!%reset%
+pause
+goto :MENU
+
+:PONTO_RESTAURACAO
+cls
+echo %rgb%Criando ponto de restauracao...%reset%
+powershell -Command "Checkpoint-Computer -Description 'GPU-RAM_Otimizacao' -RestorePointType 'MODIFY_SETTINGS'"
+pause
+goto :MENU
+
+:ABRIR_CF
+cls
+set /p DISCO="Digite a letra do disco do CF (ex: C): "
+for /f "delims=" %%f in ('dir /s /b "%DISCO%:\cfPT_launcher.exe" 2^>nul') do (start "" "%%f")
 goto :MENU
 
 :GERENCIAR_DXVK
@@ -77,18 +103,15 @@ goto :GERENCIAR_DXVK
 
 :SELECIONAR_DISCO_INST
 set /p DISCO="Digite a letra do disco onde esta o jogo (ex: C): "
-cls
-echo %rgb%Buscando cfPT_launcher.exe no disco %DISCO%... aguarde...%reset%
+echo %rgb%Buscando cfPT_launcher.exe no disco %DISCO%...%reset%
 set "CF_PATH="
 for /f "delims=" %%f in ('dir /s /b "%DISCO%:\cfPT_launcher.exe" 2^>nul') do (set "CF_PATH=%%~dpf")
 if not defined CF_PATH (echo %red%Arquivo nao encontrado!%reset% & pause & goto :MENU)
-
 echo Instalando...
 set "DXVK_URL=https://github.com/doitsujin/dxvk/releases/download/v1.10.3/dxvk-1.10.3.tar.gz"
 set "TEMP_DXVK=%temp%\dxvk_setup"
 if not exist "%TEMP_DXVK%" mkdir "%TEMP_DXVK%"
 powershell -Command "Invoke-WebRequest -Uri '%DXVK_URL%' -OutFile '%TEMP_DXVK%\dxvk.tar.gz'; tar -xzf '%TEMP_DXVK%\dxvk.tar.gz' -C '%TEMP_DXVK%'"
-
 copy "%TEMP_DXVK%\dxvk-1.10.3\x32\d3d9.dll" "%CF_PATH%\" /y >nul
 copy "%TEMP_DXVK%\dxvk-1.10.3\x32\dxgi.dll" "%CF_PATH%\" /y >nul
 if exist "%CF_PATH%\x64" (
@@ -111,19 +134,6 @@ if defined CF_PATH (
 pause
 goto :MENU
 
-:PONTO_RESTAURACAO
-cls
-echo %rgb%Criando ponto de restauracao...%reset%
-powershell -Command "Checkpoint-Computer -Description 'GPU-RAM_Otimizacao' -RestorePointType 'MODIFY_SETTINGS'"
-pause
-goto :MENU
-
-:ABRIR_CF
-for /f "delims=" %%f in ('dir /s /b "%DISCO%:\cfPT_launcher.exe" 2^>nul') do (start "" "%%f")
-goto :MENU
-
-:: Caso o usuario aperte algo inesperado, volta para o menu
-goto :MENU
 :SAIR
 exit
 
