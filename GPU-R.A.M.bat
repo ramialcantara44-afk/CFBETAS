@@ -6,32 +6,22 @@ title BETA - OTIMIZACAO
 :: ==================== AUTO UPDATE ====================
 echo Verificando atualizacoes...
 set "RAW_URL=https://raw.githubusercontent.com/ramialcantara44-afk/CFBETAS/refs/heads/main/GPU-R.A.M.bat"
-set "UPDATE_DIR=C:\UpdateTemp"
-set "NEW_BAT=%UPDATE_DIR%\GPU_new.bat"
+set "NEW_FILE=%~dp0GPU-R.A.M_new.bat"
 
-:: Cria pasta de atualizacao se nao existir
-if not exist "%UPDATE_DIR%" mkdir "%UPDATE_DIR%"
+:: Baixa o novo arquivo diretamente na pasta atual
+powershell -Command "(New-Object System.Net.WebClient).DownloadFile('%RAW_URL%?v=%random%', '%NEW_FILE%')" >nul 2>&1
 
-powershell -Command "(New-Object System.Net.WebClient).DownloadFile('%RAW_URL%?v=%random%', '%NEW_BAT%')" >nul 2>&1
-
-if exist "%NEW_BAT%" (
-    fc "%~f0" "%NEW_BAT%" >nul 2>&1
+if exist "%NEW_FILE%" (
+    :: Compara o arquivo atual com o novo
+    fc "%~f0" "%NEW_FILE%" >nul 2>&1
     if errorlevel 1 (
-        echo Nova versao encontrada! Preparando restart...
-        
-        :: Cria o script de troca na raiz para evitar erros de caminho
-        (
-            echo @echo off
-            echo timeout /t 2 /nobreak ^>nul
-            echo move /y "%NEW_BAT%" "%~f0" ^>nul
-            echo start "" "%~f0"
-        ) > "%UPDATE_DIR%\go.bat"
-        
-        :: Executa o script de troca e fecha o atual
-        start "" "%UPDATE_DIR%\go.bat"
+        echo Nova versao encontrada! Reiniciando...
+        :: Substitui o antigo pelo novo e reinicia
+        move /y "%NEW_FILE%" "%~f0" >nul
+        start "" "%~f0"
         exit
     ) else (
-        del "%NEW_BAT%" >nul 2>&1
+        del "%NEW_FILE%" >nul 2>&1
     )
 )
 :: ====================================================
