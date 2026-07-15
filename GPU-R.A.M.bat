@@ -3,32 +3,32 @@ setlocal EnableDelayedExpansion
 chcp 65001 >nul
 title BETA - OTIMIZACAO TOTAL
 
-:: ==================== AUTO UPDATE SIMPLES ====================
+:: ==================== AUTO UPDATE (CORRIGIDO) ====================
 echo.
 echo Verificando atualizacoes...
 
-set "https://raw.githubusercontent.com/ramialcantara44-afk/CFBETAS/refs/heads/main/GPU-R.A.M.bat?v=123"
+set "RAW_URL=https://raw.githubusercontent.com/ramialcantara44-afk/CFBETAS/refs/heads/main/GPU-R.A.M.bat"
 
-powershell -Command "(New-Object System.Net.WebClient).DownloadFile('%RAW_URL%?v=%random%', '%temp%\update.bat')" >nul 2>&1
+powershell -Command "(New-Object System.Net.WebClient).DownloadFile('%RAW_URL%?v=%random%', '%temp%\GPU_new.bat')" >nul 2>&1
 
-fc "%~f0" "%temp%\update.bat" >nul 2>&1
-if errorlevel 1 (
-    echo Nova versao detectada! Atualizando...
-    copy /y "%temp%\update.bat" "%~f0" >nul
-    echo Atualizado! Reinicie o programa.
-    del "%temp%\update.bat" >nul 2>&1
-    timeout /t 3 >nul
-    start "" "%~f0"
-    exit
-) else (
-    echo Versao atual.
-    del "%temp%\update.bat" >nul 2>&1
+if exist "%temp%\GPU_new.bat" (
+    fc "%~f0" "%temp%\GPU_new.bat" >nul 2>&1
+    if errorlevel 1 (
+        echo Nova versao encontrada! Atualizando...
+        copy /y "%temp%\GPU_new.bat" "%~dp0GPU-R.A.M.bat" >nul
+        del "%temp%\GPU_new.bat" >nul 2>&1
+        echo Atualizado!
+        timeout /t 2 >nul
+        start "" "%~dp0GPU-R.A.M.bat"
+        exit
+    ) else (
+        del "%temp%\GPU_new.bat" >nul 2>&1
+    )
 )
 :: ====================================================
 
-:: --- CONFIGURACAO RGB ---
+:: --- RESTO DO CODIGO ---
 for /F %%a in ('echo prompt $E ^| cmd') do set "esc=%%a"
-
 
 :: --- ANIMACAO DE ABERTURA ---
 cls
@@ -37,12 +37,12 @@ for /L %%i in (1,1,6) do (
     set /a "g=%random% %% 255"
     set /a "b=%random% %% 255"
     echo.
-    echo.
-    echo             %esc%[38;2;!r!;!g!;!b%m%    DESCARREGANDO MODULO R.A.M... [%%i/6] %esc%[0m
+    echo             %esc%[38;2;!r!;!g!;!b%m%     CARREGANDO MODULO R.A.M... [%%i/6] %esc%[0m
     timeout /t 1 >nul
 )
 
 :MENU
+:: (coloque aqui o resto do seu código do MENU em diante)
 set /a "r=%random% %% 255"
 set /a "g=%random% %% 255"
 set /a "b=%random% %% 255"
