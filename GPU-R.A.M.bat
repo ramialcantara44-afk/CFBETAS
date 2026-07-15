@@ -130,18 +130,34 @@ goto :MENU
 :OTIMIZAR
 cls
 echo %rgb%    APLICANDO OTIMIZACOES PROFUNDAS... %reset%
+
+:: --- Ajustes de Energia e CPU ---
 powercfg -setacvalueindex SCHEME_CURRENT SUB_PROCESSOR PROCTHROTTLEMAX 100
 powercfg -setacvalueindex SCHEME_CURRENT SUB_PROCESSOR PROCTHROTTLEMIN 100
 powercfg /setactive SCHEME_MIN
 powercfg -h off
+
+:: --- Desativacao de Servicos ---
 sc stop "WSearch" & sc config "WSearch" start=disabled
 sc stop "SysMain" & sc config "SysMain" start=disabled
 sc stop "DiagTrack" & sc config "DiagTrack" start=disabled
+
+:: --- Ajustes de Registro (Interface e Performance) ---
 reg add "HKEY_CURRENT_USER\Control Panel\Desktop" /v MenuShowDelay /t REG_SZ /d 0 /f
 reg add "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management" /v DisablePagingExecutive /t REG_DWORD /d 1 /f
+reg add "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Multimedia\SystemProfile" /v NetworkThrottlingIndex /t REG_DWORD /d 0xFFFFFFFF /f
+reg add "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Multimedia\SystemProfile" /v SystemResponsiveness /t REG_DWORD /d 0 /f
+
+:: --- Otimizacao de Rede (Adaptadores) ---
+powershell -Command "Get-NetAdapterAdvancedProperty | Where-Object {$_.DisplayName -like '*Power Saving*'} | Set-NetAdapterAdvancedProperty -DisplayValue 'Disabled' -ErrorAction SilentlyContinue" >nul 2>&1
+
+:: --- Remocao de Apps (Limpeza) ---
 powershell -Command "Get-AppxPackage *news* | Remove-AppxPackage; Get-AppxPackage *officehub* | Remove-AppxPackage; Get-AppxPackage *3dbuilder* | Remove-AppxPackage"
+
+:: --- Reinicio do Explorer ---
 taskkill /f /im explorer.exe >nul 2>&1
 start "" "%windir%\explorer.exe"
+
 echo %esc%[38;2;0;255;0m OTIMIZACAO PROFUNDA CONCLUIDA! %reset%
 pause
 goto :MENU
