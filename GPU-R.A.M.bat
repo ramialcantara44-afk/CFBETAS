@@ -22,26 +22,18 @@ for /F %%a in ('echo prompt $E ^| cmd') do set "esc=%%a"
 :: --- ANIMACAO DE ABERTURA CORRIGIDA ---
 @echo off
 setlocal EnableDelayedExpansion
-:: Define o caractere de escape (necessário para cores)
+:: Define o caractere de escape para cores
 for /F %%a in ('echo prompt $E ^| cmd') do set "esc=%%a"
+set "reset=%esc%[0m"
 
-cls
-for /L %%i in (1,1,6) do (
-    set /a "r=!random! %% 255"
-    set /a "g=!random! %% 255"
-    set /a "b=!random! %% 255"
-    echo.
-    echo             %esc%[38;2;!r!;!g!;!b%m%     DESCARREGANDO MODULO... [%%i/6] %esc%[0m
-    timeout /t 1 >nul
-)
+title BETA - OTIMIZACAO TOTAL
 
 :MENU
-:: (coloque aqui o resto do seu código do MENU em diante)
+:: Gera cores aleatorias
 set /a "r=%random% %% 255"
 set /a "g=%random% %% 255"
 set /a "b=%random% %% 255"
 set "rgb=%esc%[38;2;%r%;%g%;%b%m"
-set "reset=%esc%[0m"
 
 cls
 echo %rgb%                           █████╗ ███╗   ██╗████████╗██╗  ██████╗  █████╗ %reset%
@@ -49,7 +41,7 @@ echo %rgb%                           ██╔══██╗████╗ █
 echo %rgb%                           ███████║██╔██╗██║   ██║   ██║ ██║  ███╗███████║%reset%
 echo %rgb%                           ██╔══██║██║╚████║   ██║   ██║ ██║   ██║██╔══██║%reset%
 echo %rgb%                           ██║  ██║██║ ╚███║   ██║   ██║ ╚██████╔╝██║  ██║%reset%
-echo %rgb%                           ╚═╝  ╚═╝╚═╝  ╚═══╝   ╚═╝   ╚═╝  ╚═════╝ ╚═╝  ╚═╝mente%reset%
+echo %rgb%                           ╚═╝  ╚═╝╚═╝  ╚═══╝   ╚═╝   ╚═╝  ╚═════╝ ╚═╝  ╚═╝%reset%
 echo.
 echo %rgb%                           COPYRIGHT (C) 2026. TODOS OS DIREITOS RESERVADOS.%reset%
 echo.
@@ -59,10 +51,12 @@ echo %esc%[38;2;255;255;0m              [3] ABRIR CROSSFIRE AL%reset%
 echo %esc%[38;2;128;128;128m                 [ ] EM DESENVOLVIMENTO%reset%
 echo %esc%[38;2;255;255;255m                 [4] SAIR%reset%
 echo.
+
 set /p opcao="Escolha uma opcao: "
-if "%opcao%"=="1" goto :CONFIRMAR_OTIMIZAR
-if "%opcao%"=="2" goto :PREPARAR_BACKUP
-if "%opcao%"=="3" goto :SELECIONAR_DISCO
+
+if "%opcao%"=="1" goto :OTIMIZAR
+if "%opcao%"=="2" goto :BACKUP
+if "%opcao%"=="3" goto :JOGO
 if "%opcao%"=="4" exit
 goto :MENU
 
