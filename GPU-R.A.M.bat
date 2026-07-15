@@ -129,48 +129,66 @@ goto :MENU
 
 :OTIMIZAR
 cls
-echo %rgb%    APLICANDO OTIMIZACOES PROFUNDAS (MEMORIA E CPU)... %reset%
+echo APLICANDO OTIMIZACOES PROFUNDAS...
 
-:: --- Ajustes de Energia e CPU ---
+:: --- 1. Ajustes de Energia e CPU ---
 powercfg -setacvalueindex SCHEME_CURRENT SUB_PROCESSOR PROCTHROTTLEMAX 100
 powercfg -setacvalueindex SCHEME_CURRENT SUB_PROCESSOR PROCTHROTTLEMIN 100
 powercfg -setacvalueindex SCHEME_CURRENT SUB_PROCESSOR IDLEDISABLE 1
 powercfg /setactive SCHEME_MIN
 powercfg -h off
 
-:: --- Desativacao do Hyper-V ---
+:: --- 2. Virtualizacao (Hyper-V) ---
 bcdedit /set hypervisorlaunchtype off
 
-:: --- Otimizacao de Memory Management ---
-:: Melhora o cache do sistema e limites de E/S para jogos
+:: --- 3. Memoria e Explorer ---
 reg add "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management" /v LargeSystemCache /t REG_DWORD /d 1 /f
 reg add "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management" /v IoPageLockLimit /t REG_DWORD /d 0x000F4240 /f
 reg add "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management" /v DisablePagingExecutive /t REG_DWORD /d 1 /f
+reg add "HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" /v LaunchTo /t REG_DWORD /d 1 /f
+reg add "HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" /v SeparateProcess /t REG_DWORD /d 1 /f
 
-:: --- Limpeza de Cache de RAM (Comando via PowerShell) ---
-:: Força o Windows a liberar o cache de memória de standby
-powershell -Command "Clear-RecycleBin -Force -ErrorAction SilentlyContinue; [System.GC]::Collect(); [System.GC]::WaitForPendingFinalizers()"
+:: --- 4. Input Lag (Mouse e Teclado) ---
+reg add "HKEY_CURRENT_USER\Control Panel\Mouse" /v MouseSpeed /t REG_SZ /d 0 /f
+reg add "HKEY_CURRENT_USER\Control Panel\Mouse" /v MouseThreshold1 /t REG_SZ /d 0 /f
+reg add "HKEY_CURRENT_USER\Control Panel\Desktop" /v MouseSpeed /t REG_SZ /d 0 /f
+reg add "HKEY_CURRENT_USER\Control Panel\Accessibility\Keyboard Response" /v DelayBeforeAcceptance /t REG_SZ /d 0 /f
+reg add "HKEY_CURRENT_USER\Control Panel\Accessibility\Keyboard Response" /v AutoRepeatDelay /t REG_SZ /d 200 /f
+reg add "HKEY_CURRENT_USER\Control Panel\Accessibility\Keyboard Response" /v AutoRepeatRate /t REG_SZ /d 20 /f
+for /f "tokens=*" %%a in ('wmic path Win32_USBController get DeviceID /value ^| find "="') do (
+    for /f "tokens=2 delims==" %%b in ("%%a") do (
+        reg add "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Enum\%%b\Device Parameters" /v EnhancedPowerManagementEnabled /t REG_DWORD /d 0 /f 2>nul
+    )
+)
 
-:: --- Desativacao de Servicos ---
-sc stop "WSearch" & sc config "WSearch" start=disabled
-sc stop "SysMain" & sc config "SysMain" start=disabled
-sc stop "DiagTrack" & sc config "DiagTrack" start=disabled
+:: --- 5. Servicos (Lista Completa) ---
+for %%s in (WSearch SysMain DiagTrack wisvc DPS TermService WbioSrvc TabletInputService wuauserv bits DoSvc WaaSMedicSvc RetailDemo igts bthserv RemoteRegistry SessionEnv W32Time) do (
+    sc stop "%%s" >nul 2>&1
+    sc config "%%s" start= disabled >nul 2>&1
+)
 
-:: --- Ajustes de Rede ---
+:: --- 6. Interface, Privacidade e Telemetria ---
+reg add "HKLM\SOFTWARE\Policies\Microsoft\Windows\DataCollection" /v AllowTelemetry /t REG_DWORD /d 0 /f
+reg add "HKLM\SOFTWARE\Policies\Microsoft\Windows\System" /v PublishUserActivities /t REG_DWORD /d 0 /f
+reg add "HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Search" /v BingSearchEnabled /t REG_DWORD /d 0 /f
+reg add "HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Search" /v SearchHistoryEnabled /t REG_DWORD /d 0 /f
+reg add "HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Themes\Personalize" /v EnableTransparency /t REG_DWORD /d 0 /f
+reg add "HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\VisualEffects" /v VisualFXSetting /t REG_DWORD /d 2 /f
+reg add "HKEY_CURRENT_USER\Control Panel\Desktop" /v UserPreferencesMask /t REG_BINARY /d 90120000010000000000000000 /f
+reg add "HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate\AU" /v NoAutoUpdate /t REG_DWORD /d 1 /f
+
+:: --- 7. Rede ---
 reg add "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Multimedia\SystemProfile" /v NetworkThrottlingIndex /t REG_DWORD /d 0xFFFFFFFF /f
 reg add "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Multimedia\SystemProfile" /v SystemResponsiveness /t REG_DWORD /d 0 /f
 powershell -Command "Get-NetAdapterAdvancedProperty | Where-Object {$_.DisplayName -like '*Power Saving*'} | Set-NetAdapterAdvancedProperty -DisplayValue 'Disabled' -ErrorAction SilentlyContinue" >nul 2>&1
 
-:: --- Remocao de Apps ---
-powershell -Command "Get-AppxPackage *news* | Remove-AppxPackage; Get-AppxPackage *officehub* | Remove-AppxPackage; Get-AppxPackage *3dbuilder* | Remove-AppxPackage"
-
-:: --- Reinicio do Explorer ---
+:: --- 8. Limpeza Final e Reinicio ---
+powershell -Command "Get-AppxPackage *news*,*officehub*,*3dbuilder*,*Cortana*,*alarms*,*calendar*,*maps*,*messaging*,*people*,*phone*,*xbox*,*onedrive* | Remove-AppxPackage; [System.GC]::Collect()"
 taskkill /f /im explorer.exe >nul 2>&1
 start "" "%windir%\explorer.exe"
 
-echo %esc%[38;2;0;255;0m OTIMIZACAO PROFUNDA CONCLUIDA! %reset%
 echo.
-echo %esc%[38;2;255;0;0m REINICIE O PC PARA APLICAR AS ALTERACOES DO HYPER-V. %reset%
+echo OTIMIZACAO CONCLUIDA! REINICIE O PC PARA AS MUDANCAS ENTRAREM EM VIGOR.
 pause
 goto :MENU
 
