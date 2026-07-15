@@ -3,7 +3,7 @@ setlocal EnableDelayedExpansion
 chcp 65001 >nul
 title BETA - OTIMIZACAO TOTAL
 
-:: ==================== AUTO UPDATE (CORRIGIDO) ====================
+:: ==================== AUTO UPDATE ====================
 echo.
 echo Verificando atualizacoes...
 
@@ -15,10 +15,15 @@ if exist "%temp%\GPU_new.bat" (
     fc "%~f0" "%temp%\GPU_new.bat" >nul 2>&1
     if errorlevel 1 (
         echo Nova versao encontrada! Atualizando...
-       move /y "%temp%\GPU_new.bat" "%~dp0GPU-R.A.M.bat" >nul
+        :: Move o novo arquivo para o local do antigo
+        move /y "%temp%\GPU_new.bat" "%~dp0GPU-R.A.M.bat" >nul
         echo Atualizado!
-        timeout /t 2 >nul
+        
+        :: Inicia a nova versão
         start "" "%~dp0GPU-R.A.M.bat"
+        
+        :: Exclui o script atual (o antigo) e fecha este processo
+        del "%~f0"
         exit
     ) else (
         del "%temp%\GPU_new.bat" >nul 2>&1
