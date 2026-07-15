@@ -148,13 +148,33 @@ pause
 goto :MENU
 
 :SELECIONAR_DISCO
+:: Define o local fixo do log, independente do usuário
+set "LOG_DIR=%USERPROFILE%\Documents\Log de inicializacao rapida cf"
+set "LOG_FILE=%LOG_DIR%\path.txt"
+
+:: Se o log existe, pula direto para o MODO_JOGO carregando o caminho salvo
+if exist "%LOG_FILE%" (
+    set /p CF_EXEC=<"%LOG_FILE%"
+    goto :MODO_JOGO
+)
+
+:: Caso não exista, segue para a seleção manual
 cls
 echo %rgb%    SELECIONE O DISCO DO CROSSFIRE %reset%
 set /p disk="Opcao (C/D/E): "
 set "DISCO=%disk%"
-goto :MODO_JOGO
+
+:: Procura pelo executável e salva o caminho no log para a próxima vez
+for /f "delims=" %%f in ('dir /s /b "%DISCO%:\cfPT_launcher.exe" 2^>nul') do (
+    set "CF_EXEC=%%f"
+)
+
+:: Cria a pasta e salva o caminho encontrado
+if not exist "%LOG_DIR%" mkdir "%LOG_DIR%"
+echo %CF_EXEC% > "%LOG_FILE%"
 
 :MODO_JOGO
+:: O resto do seu código original continua aqui...
 cls
 echo %rgb%    --- OTIMIZANDO SISTEMA PARA O JOGO --- %reset%
 
