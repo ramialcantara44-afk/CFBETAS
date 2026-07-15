@@ -44,8 +44,8 @@ set /a "b=%random% %% 255"
 set "rgb=%esc%[38;2;%r%;%g%;%b%m"
 set "reset=%esc%[0m"
 
-cls                               
-echo %rgb%               
+cls
+echo %rgb%                   
 echo                                 █████╗ ███╗   ██╗████████╗██╗  ██████╗  █████╗ %reset%
 echo %rgb%                           ██╔══██╗████╗ ██║╚══██╔══╝██║ ██╔════╝ ██╔══██╗%reset%
 echo %rgb%                           ███████║██╔██╗██║   ██║   ██║ ██║  ███╗███████║%reset%
@@ -62,12 +62,15 @@ echo %esc%[38;2;128;128;128m                 [ ] DXKVK (VULKAN)%reset%
 echo %esc%[38;2;255;255;255m                 [4] SAIR%reset%
 echo.
 
-:: Loop de verificação de 5 segundos
-for /L %%i in (1,1,5) do (
-    timeout /t 1 >nul
-    :: Verifica se o usuário digitou algo neste intervalo (requer comando advanced)
-    :: Para simplificar, a cada 5 segundos ele redesenha o menu com nova cor
-)
+:: Substituí o loop de 5s por uma espera simples para evitar o erro de sistema
+set /p opcao="Escolha uma opcao: "
+
+if "%opcao%"=="1" goto :CONFIRMAR_OTIMIZAR
+if "%opcao%"=="2" goto :PREPARAR_BACKUP
+if "%opcao%"=="3" goto :SELECIONAR_DISCO
+if "%opcao%"=="4" exit
+
+:: Se digitar algo errado, ele volta ao menu com nova cor
 goto :MENU
 
 :CONFIRMAR_OTIMIZAR
