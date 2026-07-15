@@ -1,39 +1,34 @@
 @echo off
 setlocal EnableDelayedExpansion
 chcp 65001 >nul
-title BETA - OTIMIZACAO
+title BETA - OTIMIZACAO TOTAL
 
-:: ==================== AUTO UPDATE ====================
-:: TROQUE A LINHA ABAIXO com a URL do seu GitHub depois de subir o arquivo
-set "RAW_URL=https://raw.githubusercontent.com/ramialcantara44-afk/CFBETAS/refs/heads/main/GPU-R.A.M.bat"
-
+:: ==================== AUTO UPDATE SIMPLES ====================
 echo.
 echo Verificando atualizacoes...
-powershell -Command "(New-Object System.Net.WebClient).DownloadFile('%RAW_URL%', '%temp%\GPU-R.A.M_new.bat')" >nul 2>&1
 
-if not exist "%temp%\GPU-R.A.M_new.bat" (
-    echo Nao foi possivel verificar atualizacoes.
-    timeout /t 2 >nul
-    goto :CONTINUAR
-)
+set "RAW_URL=https://raw.githubusercontent.com/ramialcantara44-afk/CFBETAS/refs/heads/main/GPU-R.A.M.bat"
 
-fc "%~f0" "%temp%\GPU-R.A.M_new.bat" >nul 2>&1
-if %errorlevel% equ 0 (
-    del "%temp%\GPU-R.A.M_new.bat" >nul 2>&1
-) else (
-    echo Nova versao encontrada! Atualizando...
-    move /y "%temp%\GPU-R.A.M_new.bat" "%~f0" >nul 2>&1
-    echo Atualizado com sucesso! Reinicie o programa.
-    timeout /t 4 >nul
+powershell -Command "(New-Object System.Net.WebClient).DownloadFile('%RAW_URL%?v=%random%', '%temp%\update.bat')" >nul 2>&1
+
+fc "%~f0" "%temp%\update.bat" >nul 2>&1
+if errorlevel 1 (
+    echo Nova versao detectada! Atualizando...
+    copy /y "%temp%\update.bat" "%~f0" >nul
+    echo Atualizado! Reinicie o programa.
+    del "%temp%\update.bat" >nul 2>&1
+    timeout /t 3 >nul
     start "" "%~f0"
     exit
+) else (
+    echo Versao atual.
+    del "%temp%\update.bat" >nul 2>&1
 )
 :: ====================================================
 
-:CONTINUAR
-
 :: --- CONFIGURACAO RGB ---
 for /F %%a in ('echo prompt $E ^| cmd') do set "esc=%%a"
+
 
 :: --- ANIMACAO DE ABERTURA ---
 cls
