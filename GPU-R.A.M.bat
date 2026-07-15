@@ -54,45 +54,60 @@ echo %rgb%            ██╔══██║██║╚████║   █�
 echo %rgb%            ██║  ██║██║ ╚███║   ██║   ██║ ╚██████╔╝██║  ██║
 echo %rgb%            ╚═╝  ╚═╝╚═╝  ╚══╝   ╚═╝   ╚═╝  ╚═════╝ ╚═╝  ╚═╝%reset%
 echo.
-:: ... continue com o restante das linhas do seu banner
-
-echo [1] OTIMIZAR (PROFUNDO)
-echo [2] CRIAR PONTO DE RESTAURACAO
-echo [3] ABRIR CROSSFIRE AL
-echo [4] INSTALAR DXVK (VULKAN)
-echo [5] SAIR
-echo ==================================================
 set /p opt="Escolha uma opcao: "
 
 if "%opt%"=="1" goto :OTIMIZAR
 if "%opt%"=="2" goto :PONTO_RESTAURACAO
 if "%opt%"=="3" goto :ABRIR_CF
-if "%opt%"=="4" goto :SELECIONAR_DISCO
+if "%opt%"=="4" goto :GERENCIAR_DXVK
 if "%opt%"=="5" exit
 goto :MENU
 
-:OTIMIZAR
+:GERENCIAR_DXVK
 cls
-echo %rgb%APLICANDO OTIMIZACOES... AGUARDE...%reset%
-:: --- [COLE AQUI A SUA LOGICA DE OTIMIZACAO] ---
-:: Todas as configuracoes de registro e servicos entram aqui
-echo %rgb%OTIMIZACAO CONCLUIDA COM SUCESSO!%reset%
+echo [DXVK] O que deseja fazer?
+echo [1] INSTALAR DXVK 1.10.3
+echo [2] DESINSTALAR DXVK (Remover DLLs)
+echo [3] Voltar ao Menu
+set /p dxopt="Opcao: "
+if "%dxopt%"=="1" goto :SELECIONAR_DISCO_INST
+if "%dxopt%"=="2" goto :SELECIONAR_DISCO_REM
+if "%dxopt%"=="3" goto :MENU
+goto :GERENCIAR_DXVK
+
+:SELECIONAR_DISCO_INST
+set /p DISCO="Digite a letra do disco onde esta o jogo (ex: C): "
+cls
+echo %rgb%Buscando cfPT_launcher.exe no disco %DISCO%... aguarde...%reset%
+set "CF_PATH="
+for /f "delims=" %%f in ('dir /s /b "%DISCO%:\cfPT_launcher.exe" 2^>nul') do (set "CF_PATH=%%~dpf")
+if not defined CF_PATH (echo %red%Arquivo nao encontrado!%reset% & pause & goto :MENU)
+
+echo Instalando...
+set "DXVK_URL=https://github.com/doitsujin/dxvk/releases/download/v1.10.3/dxvk-1.10.3.tar.gz"
+set "TEMP_DXVK=%temp%\dxvk_setup"
+if not exist "%TEMP_DXVK%" mkdir "%TEMP_DXVK%"
+powershell -Command "Invoke-WebRequest -Uri '%DXVK_URL%' -OutFile '%TEMP_DXVK%\dxvk.tar.gz'; tar -xzf '%TEMP_DXVK%\dxvk.tar.gz' -C '%TEMP_DXVK%'"
+
+copy "%TEMP_DXVK%\dxvk-1.10.3\x32\d3d9.dll" "%CF_PATH%\" /y >nul
+copy "%TEMP_DXVK%\dxvk-1.10.3\x32\dxgi.dll" "%CF_PATH%\" /y >nul
+if exist "%CF_PATH%\x64" (
+    copy "%TEMP_DXVK%\dxvk-1.10.3\x64\d3d9.dll" "%CF_PATH%\x64\" /y >nul
+    copy "%TEMP_DXVK%\dxvk-1.10.3\x64\dxgi.dll" "%CF_PATH%\x64\" /y >nul
+)
+rd /s /q "%TEMP_DXVK%"
+echo %rgb%Instalado com sucesso!%reset%
 pause
 goto :MENU
 
-:SELECIONAR_DISCO
-cls
-echo ==================================================
-echo    SELECIONE O DISCO DO CROSSFIRE:
-echo ==================================================
-set /p DISCO="Digite a letra (ex: C): "
-goto :INSTALAR_DXVK
-
-:INSTALAR_DXVK
-cls
-echo %rgb%[DXVK] Instalando Vulkan no disco %DISCO%...%reset%
-:: --- [LOGICA DO DXVK COM AS DLLS] ---
-echo %rgb%Instalacao concluida!%reset%
+:SELECIONAR_DISCO_REM
+set /p DISCO="Digite a letra do disco do jogo para DESINSTALAR: "
+for /f "delims=" %%f in ('dir /s /b "%DISCO%:\cfPT_launcher.exe" 2^>nul') do (set "CF_PATH=%%~dpf")
+if defined CF_PATH (
+    del /f /q "%CF_PATH%d3d9.dll" "%CF_PATH%dxgi.dll" >nul 2>&1
+    del /f /q "%CF_PATH%x64\d3d9.dll" "%CF_PATH%x64\dxgi.dll" >nul 2>&1
+    echo %rgb%DXVK removido com sucesso!%reset%
+) else (echo %red%Pasta do jogo nao encontrada.%reset%)
 pause
 goto :MENU
 
