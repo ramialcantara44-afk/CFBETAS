@@ -56,19 +56,56 @@ echo %rgb%            ╚═╝  ╚═╝╚═╝  ╚══╝   ╚═╝   
 echo.
 :: ... continue com o restante das linhas do seu banner
 
-echo %esc%[38;2;0;255;0m    [1] OTIMIZAR (PROFUNDO)%reset%
-echo %esc%[38;2;255;0;0m    [2] CRIAR PONTO DE RESTAURACAO%reset%
-echo %esc%[38;2;255;255;0m    [3] ABRIR CROSSFIRE AL%reset%
-echo %esc%[38;2;128;128;128m    [ ] DXKVK (VULKAN)%reset%
-echo %esc%[38;2;255;255;255m    [4] SAIR%reset%
-echo.
+echo [1] OTIMIZAR (PROFUNDO)
+echo [2] CRIAR PONTO DE RESTAURACAO
+echo [3] ABRIR CROSSFIRE AL
+echo [4] INSTALAR DXVK (VULKAN)
+echo [5] SAIR
+echo ==================================================
+set /p opt="Escolha uma opcao: "
 
-:: O COMANDO MAIS IMPORTANTE: CHOICE espera a entrada e nao fecha a janela
-choice /c 1234 /n /m "Escolha uma opcao: "
-if errorlevel 4 exit
-if errorlevel 3 goto :SELECIONAR_DISCO
-if errorlevel 2 goto :PREPARAR_BACKUP
-if errorlevel 1 goto :CONFIRMAR_OTIMIZAR
+if "%opt%"=="1" goto :OTIMIZAR
+if "%opt%"=="2" goto :PONTO_RESTAURACAO
+if "%opt%"=="3" goto :ABRIR_CF
+if "%opt%"=="4" goto :SELECIONAR_DISCO
+if "%opt%"=="5" exit
+goto :MENU
+
+:OTIMIZAR
+cls
+echo %rgb%APLICANDO OTIMIZACOES... AGUARDE...%reset%
+:: --- [COLE AQUI A SUA LOGICA DE OTIMIZACAO] ---
+:: Todas as configuracoes de registro e servicos entram aqui
+echo %rgb%OTIMIZACAO CONCLUIDA COM SUCESSO!%reset%
+pause
+goto :MENU
+
+:SELECIONAR_DISCO
+cls
+echo ==================================================
+echo    SELECIONE O DISCO DO CROSSFIRE:
+echo ==================================================
+set /p DISCO="Digite a letra (ex: C): "
+goto :INSTALAR_DXVK
+
+:INSTALAR_DXVK
+cls
+echo %rgb%[DXVK] Instalando Vulkan no disco %DISCO%...%reset%
+:: --- [LOGICA DO DXVK COM AS DLLS] ---
+echo %rgb%Instalacao concluida!%reset%
+pause
+goto :MENU
+
+:PONTO_RESTAURACAO
+cls
+echo %rgb%Criando ponto de restauracao...%reset%
+powershell -Command "Checkpoint-Computer -Description 'GPU-RAM_Otimizacao' -RestorePointType 'MODIFY_SETTINGS'"
+pause
+goto :MENU
+
+:ABRIR_CF
+for /f "delims=" %%f in ('dir /s /b "%DISCO%:\cfPT_launcher.exe" 2^>nul') do (start "" "%%f")
+goto :MENU
 
 :: Caso o usuario aperte algo inesperado, volta para o menu
 goto :MENU
