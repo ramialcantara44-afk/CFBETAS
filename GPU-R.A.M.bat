@@ -36,9 +36,6 @@ for /L %%i in (1,1,6) do (
     timeout /t 1 >nul
 )
 
-:: FORÇA O DIRECIONAMENTO PARA O MENU SEM FECHAR
-goto :MENU
-
 :MENU
 :: Gera as cores aleatorias
 set /a "r=%random% %% 255"
@@ -47,34 +44,32 @@ set /a "b=%random% %% 255"
 set "rgb=%esc%[38;2;%r%;%g%;%b%m"
 set "reset=%esc%[0m"
 
-:: Limpa a tela completamente para remover rastros de carregamento
 cls
-echo.
-echo %rgb%            █████╗ ███╗   ██╗████████╗██╗  ██████╗  █████╗ %reset%
-echo %rgb%            ██╔══██╗████╗ ██║╚══██╔══╝██║ ██╔════╝ ██╔══██╗%reset%
-echo %rgb%            ███████║██╔██╗██║   ██║   ██║ ██║  ███╗███████║%reset%
-echo %rgb%            ██╔══██║██║╚████║   ██║   ██║ ██║   ██║██╔══██║%reset%
-echo %rgb%            ██║  ██║██║ ╚███║   ██║   ██║ ╚██████╔╝██║  ██║%reset%
-echo %rgb%            ╚═╝  ╚═╝╚═╝  ╚═══╝   ╚═╝   ╚═╝  ╚═════╝ ╚═╝  ╚═╝%reset%
-echo.
-echo %rgb%            COPYRIGHT (C) 2026. TODOS OS DIREITOS RESERVADOS.%reset%
-echo.
+:: (O restante do seu código do banner ASCII...)
+echo %rgb%                           █████╗ ███╗   ██╗████████╗██╗  ██████╗  █████╗ %reset%
+echo %rgb%                           ██╔══██╗████╗ ██║╚══██╔══╝██║ ██╔════╝ ██╔══██╗%reset%
+echo %rgb%                           ███████║██╔██╗██║   ██║   ██║ ██║  ███╗███████║%reset%
+echo %rgb%                           ██╔══██║██║╚████║   ██║   ██║ ██║   ██║██╔══██║%reset%
+echo %rgb%                           ██║  ██║██║ ╚███║   ██║   ██║ ╚██████╔╝██║  ██║%reset%
+echo %rgb%                           ╚═╝  ╚═╝╚═╝  ╚═══╝   ╚═╝   ╚═╝  ╚═════╝ ╚═╝  ╚═╝mente
+:: ... continue com o restante das linhas do seu banner
+
 echo %esc%[38;2;0;255;0m    [1] OTIMIZAR (PROFUNDO)%reset%
 echo %esc%[38;2;255;0;0m    [2] CRIAR PONTO DE RESTAURACAO%reset%
 echo %esc%[38;2;255;255;0m    [3] ABRIR CROSSFIRE AL%reset%
-echo %esc%[38;2;128;128;128m    [ ] DXKVK (VULKAN BETA)%reset%
+echo %esc%[38;2;128;128;128m    [ ] DXKVK (VULKAN)%reset%
 echo %esc%[38;2;255;255;255m    [4] SAIR%reset%
 echo.
 
-:: Temporizador de 3 segundos com escolha automática
-choice /c 1234 /t 3 /d z >nul
+:: O COMANDO MAIS IMPORTANTE: CHOICE espera a entrada e nao fecha a janela
+choice /c 1234 /n /m "Escolha uma opcao: "
 if errorlevel 4 exit
 if errorlevel 3 goto :SELECIONAR_DISCO
 if errorlevel 2 goto :PREPARAR_BACKUP
 if errorlevel 1 goto :CONFIRMAR_OTIMIZAR
 
+:: Caso o usuario aperte algo inesperado, volta para o menu
 goto :MENU
-
 :SAIR
 exit
 
