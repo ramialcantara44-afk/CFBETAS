@@ -1,7 +1,7 @@
 @echo off
 setlocal EnableDelayedExpansion
 chcp 65001 >nul
-title BETA - OTIMIZACAO TOTAL
+title BETA - OTIMIZACAO
 
 :: ==================== AUTO UPDATE ====================
 :: TROQUE A LINHA ABAIXO com a URL do seu GitHub depois de subir o arquivo
