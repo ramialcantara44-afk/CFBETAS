@@ -4,21 +4,31 @@ chcp 65001 >nul
 title BETA - OTIMIZACAO
 
 :: ==================== AUTO UPDATE ====================
-echo Verificando atualizacoes...
+echo Verificando atualizacoes... [cite: 1]
 set "RAW_URL=https://raw.githubusercontent.com/ramialcantara44-afk/CFBETAS/refs/heads/main/GPU-R.A.M.bat"
-set "NEW_FILE=%~dp0GPU-R.A.M_new.bat"
+set "NEW_FILE=%~dp0GPU-R.A.M_NEW.bat"
+set "UPDATE_SCRIPT=%~dp0update_task.bat"
 
-:: Baixa o novo arquivo diretamente na pasta atual
+:: Baixa a nova versao [cite: 2]
 powershell -Command "(New-Object System.Net.WebClient).DownloadFile('%RAW_URL%?v=%random%', '%NEW_FILE%')" >nul 2>&1
 
 if exist "%NEW_FILE%" (
-    :: Compara o arquivo atual com o novo
     fc "%~f0" "%NEW_FILE%" >nul 2>&1
     if errorlevel 1 (
-        echo Nova versao encontrada! Reiniciando...
-        :: Substitui o antigo pelo novo e reinicia
-        move /y "%NEW_FILE%" "%~f0" >nul
-        start "" "%~f0"
+        echo Nova versao encontrada! Aplicando atualizacao... [cite: 2]
+        
+        :: Cria script de ponte para excluir o antigo e renomear o novo 
+        (
+            echo @echo off
+            echo timeout /t 2 /nobreak ^>nul
+            echo del "%~f0"
+            echo ren "%NEW_FILE%" "GPU-R.A.M.bat"
+            echo start "" "%~dp0GPU-R.A.M.bat"
+            echo del "%%~f0"
+        ) > "%UPDATE_SCRIPT%"
+        
+        :: Executa a tarefa de atualizacao e fecha o script atual 
+        start "" "%UPDATE_SCRIPT%"
         exit
     ) else (
         del "%NEW_FILE%" >nul 2>&1
