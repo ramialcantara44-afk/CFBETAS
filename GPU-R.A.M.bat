@@ -1,27 +1,21 @@
-:: ==================== AUTO UPDATE (CORRIGIDO) ====================
-echo.
+:: ==================== VERIFICAR ATUALIZACAO (SEM COPIAS) ====================
 echo Verificando atualizacoes...
-
 set "RAW_URL=https://raw.githubusercontent.com/ramialcantara44-afk/CFBETAS/refs/heads/main/GPU-R.A.M.bat"
 
-powershell -Command "(New-Object System.Net.WebClient).DownloadFile('%RAW_URL%?v=%random%', '%temp%\GPU_new.bat')" >nul 2>&1
+:: Baixa apenas para a memoria ou para um unico arquivo temporario fixo
+powershell -Command "(New-Object System.Net.WebClient).DownloadFile('%RAW_URL%', '%temp%\VERSAO_ATUAL.txt')" >nul 2>&1
 
-if exist "%temp%\GPU_new.bat" (
-    fc "%~f0" "%temp%\GPU_new.bat" >nul 2>&1
+if exist "%temp%\VERSAO_ATUAL.txt" (
+    :: Compara o conteúdo do arquivo baixado com o atual
+    fc "%~f0" "%temp%\VERSAO_ATUAL.txt" >nul 2>&1
     if errorlevel 1 (
-        echo Nova versao encontrada! Atualizando...
-        copy /y "%temp%\GPU_new.bat" "%~dp0GPU-R.A.M.bat" >nul
-        del "%temp%\GPU_new.bat" >nul 2>&1
-        echo Atualizado!
-        timeout /t 2 >nul
-        start "" "%~dp0GPU-R.A.M.bat"
-        
-        exit
-    ) else (
-        del "%temp%\GPU_new.bat" >nul 2>&1
+        echo [!] Nova versao disponivel no GitHub.
+        echo [!] Por favor, baixe o novo executavel no link oficial.
+        timeout /t 5 >nul
     )
+    del "%temp%\VERSAO_ATUAL.txt" >nul 2>&1
 )
-:: ====================================================
+:: ============================================================================
 :: --- RESTO DO CODIGO ---
 for /F %%a in ('echo prompt $E ^| cmd') do set "esc=%%a"
 
