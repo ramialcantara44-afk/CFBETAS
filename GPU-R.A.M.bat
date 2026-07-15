@@ -5,30 +5,30 @@ title BETA - OTIMIZACAO
 
 :: ==================== AUTO UPDATE ====================
 echo Verificando atualizacoes...
-
 set "RAW_URL=https://raw.githubusercontent.com/ramialcantara44-afk/CFBETAS/refs/heads/main/GPU-R.A.M.bat"
-set "NEW_BAT=%temp%\GPU_new.bat"
+set "UPDATE_DIR=C:\UpdateTemp"
+set "NEW_BAT=%UPDATE_DIR%\GPU_new.bat"
 
-:: Baixa a nova versão para a pasta temp
+:: Cria pasta de atualizacao se nao existir
+if not exist "%UPDATE_DIR%" mkdir "%UPDATE_DIR%"
+
 powershell -Command "(New-Object System.Net.WebClient).DownloadFile('%RAW_URL%?v=%random%', '%NEW_BAT%')" >nul 2>&1
 
 if exist "%NEW_BAT%" (
-    :: Compara o conteúdo para ver se há atualização
     fc "%~f0" "%NEW_BAT%" >nul 2>&1
     if errorlevel 1 (
-        echo Nova versao encontrada! Aplicando...
+        echo Nova versao encontrada! Preparando restart...
         
-        :: Cria um script temporario para realizar a substituicao e o restart
+        :: Cria o script de troca na raiz para evitar erros de caminho
         (
             echo @echo off
-            echo timeout /t 1 /nobreak ^>nul
+            echo timeout /t 2 /nobreak ^>nul
             echo move /y "%NEW_BAT%" "%~f0" ^>nul
             echo start "" "%~f0"
-            echo del "%%~f0"
-        ) > "%temp%\update_exec.bat"
+        ) > "%UPDATE_DIR%\go.bat"
         
-        :: Fecha o atual e roda o script de substituicao
-        start "" "%temp%\update_exec.bat"
+        :: Executa o script de troca e fecha o atual
+        start "" "%UPDATE_DIR%\go.bat"
         exit
     ) else (
         del "%NEW_BAT%" >nul 2>&1
