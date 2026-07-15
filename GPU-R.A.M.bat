@@ -1,7 +1,7 @@
 @echo off
 setlocal EnableDelayedExpansion
 chcp 65001 >nul
-title BETA - OTIMIZACAO
+title BETA - OTIMIZADOR
 
 :: ==================== AUTO UPDATE SIMPLES ====================
 echo.
