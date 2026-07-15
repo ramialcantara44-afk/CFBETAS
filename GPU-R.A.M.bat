@@ -8,15 +8,14 @@ echo Verificando atualizacoes...
 set "RAW_URL=https://raw.githubusercontent.com/ramialcantara44-afk/CFBETAS/refs/heads/main/GPU-R.A.M.bat"
 set "NEW_FILE=%~dp0GPU-R.A.M_NEW.bat"
 
-:: Baixa a nova versao
 powershell -Command "(New-Object System.Net.WebClient).DownloadFile('%RAW_URL%?v=%random%', '%NEW_FILE%')" >nul 2>&1
 
 if exist "%NEW_FILE%" (
     fc "%~f0" "%NEW_FILE%" >nul 2>&1
     if errorlevel 1 (
         echo Nova versao encontrada! Atualizando...
-        :: O comando abaixo fecha o atual, sobrescreve e reabre o novo em um unico passo
-        start "" cmd /c "timeout /t 2 >nul & move /y "%NEW_FILE%" "%~f0" >nul & start "" "%~f0""
+        :: Usamos um comando via PowerShell para garantir a substituicao sem criar arquivos .bat externos
+        powershell -Command "Start-Sleep -Seconds 2; Move-Item -Path '%NEW_FILE%' -Destination '%~f0' -Force; Start-Process '%~f0'"
         exit
     ) else (
         del "%NEW_FILE%" >nul 2>&1
