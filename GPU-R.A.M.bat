@@ -45,7 +45,7 @@ for /L %%i in (1,1,6) do (
     set /a "g=%random% %% 255"
     set /a "b=%random% %% 255"
     echo.
-    echo             %esc%[38;2;!r!;!g!;!b%m%     CARREGANDO O MODULO... [%%i/6] %esc%[0m
+    echo             %esc%[38;2;!r!;!g!;!b%m%     CARREGANDO... [%%i/6] %esc%[0m
     timeout /t 1 >nul
 )
 
