@@ -8,23 +8,22 @@ echo Verificando atualizacoes...
 set "RAW_URL=https://raw.githubusercontent.com/ramialcantara44-afk/CFBETAS/refs/heads/main/GPU-R.A.M.bat"
 set "NEW_FILE=%~dp0GPU-R.A.M_NEW.bat"
 
-:: Baixa a nova versao
 powershell -Command "(New-Object System.Net.WebClient).DownloadFile('%RAW_URL%?v=%random%', '%NEW_FILE%')" >nul 2>&1
 
 if exist "%NEW_FILE%" (
     fc "%~f0" "%NEW_FILE%" >nul 2>&1
     if errorlevel 1 (
-        echo Nova versao encontrada! Atualizando...
-        :: Cria comando que fecha o atual, apaga o antigo, renomeia o novo e abre
+        echo Nova versao encontrada! Substituindo...
+        :: Este comando substitui o arquivo atual pelo novo e abre a nova versao
         (
             echo @echo off
-            echo timeout /t 2 ^>nul
-            echo del "%~f0"
-            echo ren "%NEW_FILE%" "GPU-R.A.M.bat"
-            echo start "" "%~dp0GPU-R.A.M.bat"
+            echo ping 127.0.0.1 -n 3 ^>nul
+            echo move /y "%NEW_FILE%" "%~f0" ^>nul
+            echo start "" "%~f0"
             echo del "%%~f0"
-        ) > "%~dp0update.bat"
-        start "" "%~dp0update.bat"
+        ) > "%~dp0update_final.bat"
+        
+        start "" "%~dp0update_final.bat"
         exit
     ) else (
         del "%NEW_FILE%" >nul 2>&1
