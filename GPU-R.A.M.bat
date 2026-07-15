@@ -1,39 +1,52 @@
-:: ==================== VERIFICAR ATUALIZACAO (SEM COPIAS) ====================
+@echo off
+setlocal EnableDelayedExpansion
+chcp 65001 >nul
+title BETA - OTIMIZACAO TOTAL
+
+:: ==================== AUTO UPDATE (CORRIGIDO) ====================
+echo.
 echo Verificando atualizacoes...
+
 set "RAW_URL=https://raw.githubusercontent.com/ramialcantara44-afk/CFBETAS/refs/heads/main/GPU-R.A.M.bat"
 
-:: Baixa apenas para a memoria ou para um unico arquivo temporario fixo
-powershell -Command "(New-Object System.Net.WebClient).DownloadFile('%RAW_URL%', '%temp%\VERSAO_ATUAL.txt')" >nul 2>&1
+powershell -Command "(New-Object System.Net.WebClient).DownloadFile('%RAW_URL%?v=%random%', '%temp%\GPU_new.bat')" >nul 2>&1
 
-if exist "%temp%\VERSAO_ATUAL.txt" (
-    :: Compara o conteúdo do arquivo baixado com o atual
-    fc "%~f0" "%temp%\VERSAO_ATUAL.txt" >nul 2>&1
+if exist "%temp%\GPU_new.bat" (
+    fc "%~f0" "%temp%\GPU_new.bat" >nul 2>&1
     if errorlevel 1 (
-        echo [!] Nova versao disponivel no GitHub.
-        echo [!] Por favor, baixe o novo executavel no link oficial.
-        timeout /t 5 >nul
+        echo Nova versao encontrada! Atualizando...
+       move /y "%temp%\GPU_new.bat" "%~dp0GPU-R.A.M.bat" >nul
+        echo Atualizado!
+        timeout /t 2 >nul
+        start "" "%~dp0GPU-R.A.M.bat"
+        exit
+    ) else (
+        del "%temp%\GPU_new.bat" >nul 2>&1
     )
-    del "%temp%\VERSAO_ATUAL.txt" >nul 2>&1
 )
-:: ============================================================================
+:: ====================================================
+
 :: --- RESTO DO CODIGO ---
 for /F %%a in ('echo prompt $E ^| cmd') do set "esc=%%a"
 
-:: --- ANIMACAO DE ABERTURA CORRIGIDA ---
-@echo off
-setlocal EnableDelayedExpansion
-:: Define o caractere de escape para cores
-for /F %%a in ('echo prompt $E ^| cmd') do set "esc=%%a"
-set "reset=%esc%[0m"
-
-title BETA - OTIMIZACAO TOTAL
+:: --- ANIMACAO DE ABERTURA ---
+cls
+for /L %%i in (1,1,6) do (
+    set /a "r=%random% %% 255"
+    set /a "g=%random% %% 255"
+    set /a "b=%random% %% 255"
+    echo.
+    echo             %esc%[38;2;!r!;!g!;!b%m%     DESCARREGANDO MODULO... [%%i/6] %esc%[0m
+    timeout /t 1 >nul
+)
 
 :MENU
-:: Gera cores aleatorias
+:: (coloque aqui o resto do seu código do MENU em diante)
 set /a "r=%random% %% 255"
 set /a "g=%random% %% 255"
 set /a "b=%random% %% 255"
 set "rgb=%esc%[38;2;%r%;%g%;%b%m"
+set "reset=%esc%[0m"
 
 cls
 echo %rgb%                           █████╗ ███╗   ██╗████████╗██╗  ██████╗  █████╗ %reset%
@@ -41,7 +54,7 @@ echo %rgb%                           ██╔══██╗████╗ █
 echo %rgb%                           ███████║██╔██╗██║   ██║   ██║ ██║  ███╗███████║%reset%
 echo %rgb%                           ██╔══██║██║╚████║   ██║   ██║ ██║   ██║██╔══██║%reset%
 echo %rgb%                           ██║  ██║██║ ╚███║   ██║   ██║ ╚██████╔╝██║  ██║%reset%
-echo %rgb%                           ╚═╝  ╚═╝╚═╝  ╚═══╝   ╚═╝   ╚═╝  ╚═════╝ ╚═╝  ╚═╝%reset%
+echo %rgb%                           ╚═╝  ╚═╝╚═╝  ╚═══╝   ╚═╝   ╚═╝  ╚═════╝ ╚═╝  ╚═╝mente%reset%
 echo.
 echo %rgb%                           COPYRIGHT (C) 2026. TODOS OS DIREITOS RESERVADOS.%reset%
 echo.
@@ -51,12 +64,10 @@ echo %esc%[38;2;255;255;0m              [3] ABRIR CROSSFIRE AL%reset%
 echo %esc%[38;2;128;128;128m                 [ ] EM DESENVOLVIMENTO%reset%
 echo %esc%[38;2;255;255;255m                 [4] SAIR%reset%
 echo.
-
 set /p opcao="Escolha uma opcao: "
-
-if "%opcao%"=="1" goto :OTIMIZAR
-if "%opcao%"=="2" goto :BACKUP
-if "%opcao%"=="3" goto :JOGO
+if "%opcao%"=="1" goto :CONFIRMAR_OTIMIZAR
+if "%opcao%"=="2" goto :PREPARAR_BACKUP
+if "%opcao%"=="3" goto :SELECIONAR_DISCO
 if "%opcao%"=="4" exit
 goto :MENU
 
