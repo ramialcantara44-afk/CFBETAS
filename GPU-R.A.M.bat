@@ -129,33 +129,39 @@ goto :MENU
 
 :OTIMIZAR
 cls
-echo %rgb%    APLICANDO OTIMIZACOES PROFUNDAS... %reset%
+echo %rgb%    APLICANDO OTIMIZACOES PROFUNDAS (MEMORIA E CPU)... %reset%
 
-:: --- Ajustes de Energia e CPU (Throttling desativado) ---
+:: --- Ajustes de Energia e CPU ---
 powercfg -setacvalueindex SCHEME_CURRENT SUB_PROCESSOR PROCTHROTTLEMAX 100
 powercfg -setacvalueindex SCHEME_CURRENT SUB_PROCESSOR PROCTHROTTLEMIN 100
 powercfg -setacvalueindex SCHEME_CURRENT SUB_PROCESSOR IDLEDISABLE 1
 powercfg /setactive SCHEME_MIN
 powercfg -h off
 
-:: --- Desativacao do Hyper-V (Reducao de latencia) ---
+:: --- Desativacao do Hyper-V ---
 bcdedit /set hypervisorlaunchtype off
+
+:: --- Otimizacao de Memory Management ---
+:: Melhora o cache do sistema e limites de E/S para jogos
+reg add "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management" /v LargeSystemCache /t REG_DWORD /d 1 /f
+reg add "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management" /v IoPageLockLimit /t REG_DWORD /d 0x000F4240 /f
+reg add "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management" /v DisablePagingExecutive /t REG_DWORD /d 1 /f
+
+:: --- Limpeza de Cache de RAM (Comando via PowerShell) ---
+:: Força o Windows a liberar o cache de memória de standby
+powershell -Command "Clear-RecycleBin -Force -ErrorAction SilentlyContinue; [System.GC]::Collect(); [System.GC]::WaitForPendingFinalizers()"
 
 :: --- Desativacao de Servicos ---
 sc stop "WSearch" & sc config "WSearch" start=disabled
 sc stop "SysMain" & sc config "SysMain" start=disabled
 sc stop "DiagTrack" & sc config "DiagTrack" start=disabled
 
-:: --- Ajustes de Registro (Interface e Performance) ---
-reg add "HKEY_CURRENT_USER\Control Panel\Desktop" /v MenuShowDelay /t REG_SZ /d 0 /f
-reg add "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management" /v DisablePagingExecutive /t REG_DWORD /d 1 /f
+:: --- Ajustes de Rede ---
 reg add "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Multimedia\SystemProfile" /v NetworkThrottlingIndex /t REG_DWORD /d 0xFFFFFFFF /f
 reg add "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Multimedia\SystemProfile" /v SystemResponsiveness /t REG_DWORD /d 0 /f
-
-:: --- Otimizacao de Rede ---
 powershell -Command "Get-NetAdapterAdvancedProperty | Where-Object {$_.DisplayName -like '*Power Saving*'} | Set-NetAdapterAdvancedProperty -DisplayValue 'Disabled' -ErrorAction SilentlyContinue" >nul 2>&1
 
-:: --- Limpeza de Apps ---
+:: --- Remocao de Apps ---
 powershell -Command "Get-AppxPackage *news* | Remove-AppxPackage; Get-AppxPackage *officehub* | Remove-AppxPackage; Get-AppxPackage *3dbuilder* | Remove-AppxPackage"
 
 :: --- Reinicio do Explorer ---
@@ -164,7 +170,7 @@ start "" "%windir%\explorer.exe"
 
 echo %esc%[38;2;0;255;0m OTIMIZACAO PROFUNDA CONCLUIDA! %reset%
 echo.
-echo %esc%[38;2;255;0;0m REINICIE O COMPUTADOR PARA APLICAR AS MUDANCAS DO HYPER-V %reset%
+echo %esc%[38;2;255;0;0m REINICIE O PC PARA APLICAR AS ALTERACOES DO HYPER-V. %reset%
 pause
 goto :MENU
 
