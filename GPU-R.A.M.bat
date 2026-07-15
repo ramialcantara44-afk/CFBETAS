@@ -62,6 +62,7 @@ echo.
 echo %esc%[38;2;0;255;0m    [1] OTIMIZAR (PROFUNDO)%reset%
 echo %esc%[38;2;255;0;0m          [2] CRIAR PONTO DE RESTAURACAO%reset%
 echo %esc%[38;2;255;255;0m              [3] ABRIR CROSSFIRE%reset%
+echo %esc%[38;2;128;128;128m                 [ ] EM DESENVOLVIMENTO%reset%
 echo %esc%[38;2;255;255;255m                 [4] SAIR%reset%
 echo.
 set /p opcao="Escolha uma opcao: "
