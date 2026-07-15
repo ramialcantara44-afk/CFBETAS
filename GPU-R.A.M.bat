@@ -37,23 +37,22 @@ for /L %%i in (1,1,6) do (
 )
 
 :MENU
-:: Define as cores aleatórias
+:: Gera as cores aleatorias 
 set /a "r=%random% %% 255"
 set /a "g=%random% %% 255"
 set /a "b=%random% %% 255"
 set "rgb=%esc%[38;2;%r%;%g%;%b%m"
 set "reset=%esc%[0m"
 
-cls
-echo %rgb%                   
-echo                                 █████╗ ███╗   ██╗████████╗██╗  ██████╗  █████╗ %reset%
+:: Desenha o menu na tela
+cls                               
+echo %rgb%                           █████╗ ███╗   ██╗████████╗██╗  ██████╗  █████╗ %reset%
 echo %rgb%                           ██╔══██╗████╗ ██║╚══██╔══╝██║ ██╔════╝ ██╔══██╗%reset%
 echo %rgb%                           ███████║██╔██╗██║   ██║   ██║ ██║  ███╗███████║%reset%
 echo %rgb%                           ██╔══██║██║╚████║   ██║   ██║ ██║   ██║██╔══██║%reset%
 echo %rgb%                           ██║  ██║██║ ╚███║   ██║   ██║ ╚██████╔╝██║  ██║%reset%
-echo %rgb%                           ╚═╝  ╚═╝╚═╝  ╚═══╝   ╚═╝   ╚═╝  ╚═════╝ ╚═╝  ╚═╝%reset%
-echo.
-echo %rgb%                           COPYRIGHT (C) 2026. TODOS OS DIREITOS RESERVADOS.%reset%
+echo %rgb%                           ╚═╝  ╚═╝╚═╝  ╚═══╝   ╚═╝   ╚═╝  ╚═════╝ ╚═╝  ╚═╝mente%reset%
+echo %rgb%                           COPYRIGHT (C) 2026. TODOS OS DIREITOS RESERVADOS. [cite: 7]%reset%
 echo.
 echo %esc%[38;2;0;255;0m    [1] OTIMIZAR (PROFUNDO)%reset%
 echo %esc%[38;2;255;0;0m          [2] CRIAR PONTO DE RESTAURACAO%reset%
@@ -62,16 +61,19 @@ echo %esc%[38;2;128;128;128m                 [ ] DXKVK (VULKAN)%reset%
 echo %esc%[38;2;255;255;255m                 [4] SAIR%reset%
 echo.
 
-:: Substituí o loop de 5s por uma espera simples para evitar o erro de sistema
-set /p opcao="Escolha uma opcao: "
+:: O truque: Usar timeout para verificar entrada em blocos de 1 segundo
+:: Se o usuário não digitar nada em 3 segundos, ele volta ao início do :MENU e troca a cor
+choice /c 1234 /t 3 /d z >nul
+if errorlevel 4 goto :SAIR
+if errorlevel 3 goto :SELECIONAR_DISCO
+if errorlevel 2 goto :PREPARAR_BACKUP
+if errorlevel 1 goto :CONFIRMAR_OTIMIZAR
 
-if "%opcao%"=="1" goto :CONFIRMAR_OTIMIZAR
-if "%opcao%"=="2" goto :PREPARAR_BACKUP
-if "%opcao%"=="3" goto :SELECIONAR_DISCO
-if "%opcao%"=="4" exit
-
-:: Se digitar algo errado, ele volta ao menu com nova cor
+:: Se o tempo acabar (timeout), volta para o menu e sorteia nova cor
 goto :MENU
+
+:SAIR
+exit
 
 :CONFIRMAR_OTIMIZAR
 cls
