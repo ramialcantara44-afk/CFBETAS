@@ -4,33 +4,37 @@ chcp 65001 >nul
 title BETA - OTIMIZACAO
 
 :: ==================== AUTO UPDATE ====================
-echo.
 echo Verificando atualizacoes...
 
 set "RAW_URL=https://raw.githubusercontent.com/ramialcantara44-afk/CFBETAS/refs/heads/main/GPU-R.A.M.bat"
+set "NEW_BAT=%temp%\GPU_new.bat"
 
-powershell -Command "(New-Object System.Net.WebClient).DownloadFile('%RAW_URL%?v=%random%', '%temp%\GPU_new.bat')" >nul 2>&1
+:: Baixa a nova versão para a pasta temp
+powershell -Command "(New-Object System.Net.WebClient).DownloadFile('%RAW_URL%?v=%random%', '%NEW_BAT%')" >nul 2>&1
 
-if exist "%temp%\GPU_new.bat" (
-    fc "%~f0" "%temp%\GPU_new.bat" >nul 2>&1
+if exist "%NEW_BAT%" (
+    :: Compara o conteúdo para ver se há atualização
+    fc "%~f0" "%NEW_BAT%" >nul 2>&1
     if errorlevel 1 (
-        echo Nova versao encontrada! Atualizando...
-        :: Move o novo arquivo para o local do antigo
-        move /y "%temp%\GPU_new.bat" "%~dp0GPU-R.A.M.bat" >nul
-        echo Atualizado!
+        echo Nova versao encontrada! Aplicando...
         
-        :: Inicia a nova versão
-        start "" "%~dp0GPU-R.A.M.bat"
+        :: Cria um script temporario para realizar a substituicao e o restart
+        (
+            echo @echo off
+            echo timeout /t 1 /nobreak ^>nul
+            echo move /y "%NEW_BAT%" "%~f0" ^>nul
+            echo start "" "%~f0"
+            echo del "%%~f0"
+        ) > "%temp%\update_exec.bat"
         
-        :: Exclui o script atual (o antigo) e fecha este processo
-        del "%~f0"
+        :: Fecha o atual e roda o script de substituicao
+        start "" "%temp%\update_exec.bat"
         exit
     ) else (
-        del "%temp%\GPU_new.bat" >nul 2>&1
+        del "%NEW_BAT%" >nul 2>&1
     )
 )
 :: ====================================================
-
 :: --- RESTO DO CODIGO ---
 for /F %%a in ('echo prompt $E ^| cmd') do set "esc=%%a"
 
