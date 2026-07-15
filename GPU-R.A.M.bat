@@ -37,6 +37,13 @@ for /L %%i in (1,1,6) do (
 )
 
 :MENU
+:: (coloque aqui o resto do seu código do MENU em diante)
+set /a "r=%random% %% 255"
+set /a "g=%random% %% 255"
+set /a "b=%random% %% 255"
+set "rgb=%esc%[38;2;%r%;%g%;%b%m"
+set "reset=%esc%[0m"
+
 cls
 echo %rgb%
 cls
@@ -46,7 +53,6 @@ echo %rgb%                           ███████║██╔██╗�
 echo %rgb%                           ██╔══██║██║╚████║   ██║   ██║ ██║   ██║██╔══██║%reset%
 echo %rgb%                           ██║  ██║██║ ╚███║   ██║   ██║ ╚██████╔╝██║  ██║%reset%
 echo %rgb%                           ╚═╝  ╚═╝╚═╝  ╚═══╝   ╚═╝   ╚═╝  ╚═════╝ ╚═╝  ╚═╝
-echo %reset%
 echo %rgb%                           COPYRIGHT (C) 2026. TODOS OS DIREITOS RESERVADOS.
 echo ==================================================
 echo [1] OTIMIZAR (PROFUNDO)
