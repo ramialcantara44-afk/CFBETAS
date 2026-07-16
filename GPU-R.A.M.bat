@@ -1,4 +1,10 @@
 @echo off
+:: Verifica se o arquivo de controle existe para abrir direto o menu do jogador
+if exist "%temp%\modo_jogo.txt" (
+    del "%temp%\modo_jogo.txt"
+    goto :MENU_JOGO
+)
+
 setlocal EnableDelayedExpansion
 chcp 65001 >nul
 title BETA - OTIMIZACAO
@@ -24,69 +30,34 @@ if exist "%NEW_FILE%" (
     ) else ( del "%NEW_FILE%" >nul 2>&1 )
 )
 
-:: ==================== CONFIGURACOES GERAIS ====================
+:: ==================== MENU PRINCIPAL ====================
 for /F %%a in ('echo prompt $E ^| cmd') do set "esc=%%a"
-
-:: --- ANIMACAO DE ABERTURA ---
-cls
-for /L %%i in (1,1,6) do (
-    set /a "r=%random% %% 255", "g=%random% %% 255", "b=%random% %% 255"
-    echo.
-    echo           %esc%[38;2;!r!;!g!;!b%m%     CARREGANDO... [%%i/6] %esc%[0m
-    timeout /t 1 >nul
-)
-
 :MENU
-set /a "r=%random% %% 255", "g=%random% %% 255", "b=%random% %% 255"
-set "rgb=%esc%[38;2;%r%;%g%;%b%m"
-set "reset=%esc%[0m"
-
 cls
-echo %rgb%
-echo           █████╗ ███╗   ██╗████████╗██╗  ██████╗  █████╗ 
-echo           ██╔══██╗████╗  ██║╚══██╔══╝██║ ██╔════╝ ██╔══██╗
-echo           ███████║██╔██╗ ██║   ██║   ██║ ██║  ███╗███████║
-echo           ██╔══██║██║╚████║   ██║   ██║ ██║   ██║██╔══██║
-echo           ██║  ██║██║ ╚███║   ██║   ██║ ╚██████╔╝██║  ██║
-echo           ╚═╝  ╚═╝╚═╝  ╚═══╝   ╚═╝   ╚═╝  ╚═════╝ ╚═╝  ╚═╝
-echo           COPYRIGHT (C) 2026. TODOS OS DIREITOS RESERVADOS.
-echo ==================================================
-echo %esc%[38;2;0;255;0m    [1] OTIMIZAR (PROFUNDO)%reset%
-echo %esc%[38;2;255;0;0m          [2] CRIAR PONTO DE RESTAURACAO%reset%
-echo %esc%[38;2;255;255;0m              [3] ABRIR CROSSFIRE%reset%
-echo %esc%[38;2;128;128;128m                [4] GERENCIAR DXVK (VULKAN)%reset%
-echo %esc%[38;2;255;255;255m                 [5] SAIR%reset%
-echo ==================================================
-set /p opt="Escolha uma opcao: "
-if "%opt%"=="1" goto :CONFIRMAR_OTIMIZAR
+echo █████╗ ███╗   ██╗████████╗██╗  ██████╗  █████╗ 
+echo ██╔══██╗████╗  ██║╚══██╔══╝██║ ██╔════╝ ██╔══██╗
+echo ███████║██╔██╗ ██║   ██║   ██║ ██║  ███╗███████║
+echo ██╔══██║██║╚████║   ██║   ██║ ██║   ██║██╔══██║
+echo ██║  ██║██║ ╚███║   ██║   ██║ ╚██████╔╝██║  ██║
+echo ╚═╝  ╚═╝╚═╝  ╚═══╝   ╚═╝   ╚═╝  ╚═════╝ ╚═╝  ╚═╝
+echo [1] OTIMIZAR [2] BACKUP [3] ABRIR JOGO [4] DXVK [5] SAIR
+set /p opt="Escolha: "
+if "%opt%"=="1" goto :OTIMIZAR
 if "%opt%"=="2" goto :PREPARAR_BACKUP
 if "%opt%"=="3" goto :ABRIR_CF
 if "%opt%"=="4" goto :GERENCIAR_DXVK
 if "%opt%"=="5" exit
 goto :MENU
 
-:CONFIRMAR_OTIMIZAR
-cls
-echo %esc%[38;2;255;0;0m!!! ATENCAO: MODIFICACOES PROFUNDAS NO SISTEMA !!!%reset%
-set /p confirm="Deseja prosseguir com a APLICACAO TOTAL destas mudancas? (S/N): "
-if /i "%confirm%"=="S" goto :OTIMIZAR
-goto :MENU
-
 :OTIMIZAR
-cls
-echo APLICANDO OTIMIZACOES PROFUNDAS...
-:: [Registros e servicos mantidos]
 powercfg /setactive SCHEME_MIN
 reg add "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management" /v DisablePagingExecutive /t REG_DWORD /d 1 /f
-taskkill /f /im explorer.exe >nul 2>&1
-start "" "%windir%\explorer.exe"
-echo OTIMIZACAO CONCLUIDA!
+echo Otimizado!
 pause
 goto :MENU
 
 :PREPARAR_BACKUP
 powershell -Command "Checkpoint-Computer -Description 'Backup_RAM_Total' -RestorePointType 'MODIFY_SETTINGS'"
-echo Ponto de restauracao criado!
 pause
 goto :MENU
 
@@ -94,9 +65,8 @@ goto :MENU
 set "CONFIG_DIR=%USERPROFILE%\Documents\Cross Fire"
 set "CONFIG_FILE=%CONFIG_DIR%\config_cf.txt"
 if exist "%CONFIG_FILE%" (set /p CF_EXEC=<"%CONFIG_FILE%" & set "CF_EXEC=!CF_EXEC:"=!" & if exist "!CF_EXEC!" goto :INICIAR_JOGO)
-set /p "LETRA=Configuracao nao encontrada. Digite a letra do disco (ex: C): "
+set /p "LETRA=Digite a letra do disco (ex: C): "
 for /f "delims=" %%f in ('dir /s /b "%LETRA%:\cfPT_launcher.exe" 2^>nul') do (set "CF_EXEC=%%f")
-if not defined CF_EXEC (echo Arquivo nao encontrado! & pause & goto :MENU)
 if not exist "%CONFIG_DIR%" mkdir "%CONFIG_DIR%"
 echo "!CF_EXEC!">"%CONFIG_FILE%"
 
@@ -107,26 +77,23 @@ for %%I in ("%CF_EXEC%") do set "JOGO_PASTA=%%~dpI"
 pushd "%JOGO_PASTA%"
 start "" "cfPT_launcher.exe"
 popd
-:: Abre o painel em nova janela e fecha esta
-start "PAINEL DE OTIMIZACAO" cmd /c "%~f0 :MENU_JOGO"
+:: Cria sinalizador para o painel abrir em nova janela
+echo. >"%temp%\modo_jogo.txt"
+start "PAINEL DE OTIMIZACAO" "%~f0"
 exit
 
 :MENU_JOGO
-:LOOP_MENU_JOGO
 cls
 echo --- PAINEL DE OTIMIZACAO DO JOGADOR ---
-echo [1] Limpar Memoria RAM
-echo [2] Fechar Jogo e Sair
-echo [3] Gerenciar Explorer
-echo [4] Sair do Painel
-echo.
+echo [1] Limpar Memoria | [2] Fechar Jogo e Sair | [3] Gerenciar Explorer | [4] Sair
 set /p j_op="Escolha: "
-if "%j_op%"=="1" (taskkill /f /im chrome.exe /im msedge.exe /im discord.exe /im steam.exe >nul 2>&1 & goto :LOOP_MENU_JOGO)
+if "%j_op%"=="1" (taskkill /f /im chrome.exe /im msedge.exe /im discord.exe /im steam.exe >nul 2>&1 & goto :MENU_JOGO)
 if "%j_op%"=="2" (taskkill /f /im cfPT_launcher.exe >nul 2>&1 & start "" explorer.exe & exit)
-if "%j_op%"=="3" (taskkill /f /im explorer.exe >nul 2>&1 & timeout /t 2 >nul & start "" explorer.exe & goto :LOOP_MENU_JOGO)
+if "%j_op%"=="3" (taskkill /f /im explorer.exe >nul 2>&1 & timeout /t 2 >nul & start "" explorer.exe & goto :MENU_JOGO)
 if "%j_op%"=="4" exit
-goto :LOOP_MENU_JOGO
+goto :MENU_JOGO
 
 :GERENCIAR_DXVK
-:: [Logica de DXVK mantida]
+echo Em desenvolvimento...
+pause
 goto :MENU
