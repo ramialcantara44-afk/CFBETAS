@@ -360,39 +360,31 @@ goto :MODO_JOGO
 
 :MODO_JOGO
 cls
-echo Otimizando sistema e buscando o jogo no disco %DISCO%...
+echo %rgb%    --- OTIMIZANDO SISTEMA PARA O JOGO --- %reset%
 
-:: [1/4] Finalizando aplicativos
-taskkill /f /im chrome.exe >nul 2>&1
-taskkill /f /im msedge.exe >nul 2>&1
-taskkill /f /im discord.exe >nul 2>&1
-taskkill /f /im steam.exe >nul 2>&1
+echo [1/4] Finalizando navegadores e processos...
+taskkill /f /im chrome.exe /t >nul 2>&1
+taskkill /f /im msedge.exe /t >nul 2>&1
+taskkill /f /im discord.exe /t >nul 2>&1
+taskkill /f /im steam.exe /t >nul 2>&1
 
-:: [2/4] Limpando temporarios
-del /q /s /f "%temp%\*.*" >nul 2>&1
-for /d %%x in ("%temp%\*") do rd /s /q "%%x" >nul 2>&1
+echo [2/4] Desativando servicos de fundo...
+:: Aqui forçamos a parada dos servicos pesados 
+sc stop "WSearch" >nul 2>&1
+sc stop "SysMain" >nul 2>&1
+sc config "WSearch" start= disabled >nul 2>&1
+sc config "SysMain" start= disabled >nul 2>&1
 
-:: [3/4] Liberando RAM
-taskkill /f /im explorer.exe >nul 2>&1
+echo [3/4] Liberando RAM (Finalizando Explorer)...
+taskkill /f /im explorer.exe /t >nul 2>&1
 
-:: [4/4] Buscando e Iniciando Crossfire
-set "CF_EXEC="
-for /f "delims=" %%f in ('dir /s /b "%DISCO%:\cfPT_launcher.exe" 2^>nul') do (
-    set "CF_EXEC=%%f"
-)
+echo [4/4] Iniciando Crossfire...
+:: Busca e executa o jogo [cite: 13]
+for /f "delims=" %%f in ('dir /s /b "%DISCO%:\cfPT_launcher.exe" 2^>nul') do (set "CF_EXEC=%%f" & set "CF_PATH=%%~dpf")
+pushd "%CF_PATH%"
+start "" "cfPT_launcher.exe"
+popd
 
-if not defined CF_EXEC (
-    echo.
-    echo ERRO: Arquivo cfPT_launcher.exe nao encontrado no disco %DISCO%:.
-    pause
-    start "" "%windir%\explorer.exe"
-    goto :MENU
-)
-
-:: Execucao segura com aspas para evitar erros de espacamento
-start "" "%CF_EXEC%"
-
-timeout /t 10 >nul
 goto :MENU_JOGO
 
 :MENU_JOGO
