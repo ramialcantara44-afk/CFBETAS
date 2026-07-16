@@ -1,4 +1,13 @@
 @echo off
+net session >nul 2>&1
+if %errorLevel% == 0 (
+    goto :admin_ok
+) else (
+    echo Pedindo privilegios de administrador...
+    powershell start -verb runas '%0'
+    exit
+)
+:admin_ok
 setlocal EnableDelayedExpansion
 chcp 65001 >nul
 title BETA - OTIMIZACAO
