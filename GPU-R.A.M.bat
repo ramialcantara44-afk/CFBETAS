@@ -112,77 +112,37 @@ goto :MENU_JOGO
 
 :ABRIR_CF
 cls
-echo %rgb%=== ABRINDO CROSSFIRE ===%reset%
-
-:: Carrega caminho salvo
 set "CONFIG_DIR=%USERPROFILE%\Documents\Cross Fire"
 set "CONFIG_FILE=%CONFIG_DIR%\config_cf.txt"
 
+:: Verifica se o arquivo de configuração existe e tenta ler o caminho
 if exist "%CONFIG_FILE%" (
     set /p CF_EXEC=<"%CONFIG_FILE%"
+    :: Remove aspas existentes para padronizar
     set "CF_EXEC=%CF_EXEC:"=%"
     if exist "!CF_EXEC!" goto :INICIAR_JOGO
 )
 
-:: Busca automática
+:: Caso nao exista ou nao seja valido, solicita a busca
 echo.
-set /p "LETRA=Digite a letra do disco (ex: C): "
-echo Buscando cfPT_launcher.exe...
+set /p "LETRA=Configuracao nao encontrada. Digite a letra do disco (ex: C): "
+echo Buscando cfPT_launcher.exe no disco %LETRA%... Aguarde...
+
 set "CF_EXEC="
-for /f "delims=" %%f in ('powershell -Command "Get-ChildItem -Path '%LETRA%:\' -Filter 'cfPT_launcher.exe' -Recurse -ErrorAction SilentlyContinue | Select-Object -ExpandProperty FullName -First 1"') do set "CF_EXEC=%%f"
+for /f "delims=" %%f in ('powershell -Command "Get-ChildItem -Path '%LETRA%:\' -Filter 'cfPT_launcher.exe' -Recurse -ErrorAction SilentlyContinue | Select-Object -ExpandProperty FullName -First 1"') do (
+    set "CF_EXEC=%%f"
+)
 
 if not defined CF_EXEC (
-    echo ERRO: cfPT_launcher.exe nao encontrado!
+    echo.
+    echo ERRO: Arquivo 'cfPT_launcher.exe' nao encontrado no disco %LETRA%:.
     pause
     goto :MENU
 )
 
+:: Salva o caminho com aspas para evitar erros com espacos 
 if not exist "%CONFIG_DIR%" mkdir "%CONFIG_DIR%"
 echo "%CF_EXEC%">"%CONFIG_FILE%"
-
-:INICIAR_JOGO
-echo Preparando sistema para o jogo...
-
-:: === FECHA SERVIÇOS E PROCESSOS ===
-call :OTIMIZAR  :: reutiliza as otimizações de serviços
-
-taskkill /f /im explorer.exe >nul 2>&1
-taskkill /f /im chrome.exe >nul 2>&1
-taskkill /f /im msedge.exe >nul 2>&1
-taskkill /f /im discord.exe >nul 2>&1
-taskkill /f /im steam.exe >nul 2>&1
-taskkill /f /im OneDrive.exe >nul 2>&1
-
-echo Limpando temporarios...
-del /q /s /f "%temp%\*.*" >nul 2>&1
-
-echo Iniciando launcher do CrossFire...
-:: Extrai a pasta do executavel
-for %%I in ("%CF_EXEC%") do set "JOGO_PASTA=%%~dpI"
-
-pushd "%JOGO_PASTA%"
-start "" "cfPT_launcher.exe"
-popd
-
-echo.
-echo %rgb%Launcher iniciado! Aguarde o menu abrir.%reset%
-echo Quando fechar o jogo, o Explorer volta automaticamente.
-
-timeout /t 8 >nul
-
-:AGUARDAR_FECHAMENTO
-tasklist /fi "IMAGENAME eq cfPT_launcher.exe" /fo csv 2>nul | find /i "cfPT_launcher.exe" >nul
-if %errorlevel%==0 (
-    timeout /t 6 >nul
-    goto :AGUARDAR_FECHAMENTO
-)
-
-:: Reabre Explorer quando o jogo fechar
-start "" "%windir%\explorer.exe"
-echo.
-echo Jogo fechado. Explorer restaurado.
-pause
-goto :MENU
 
 :ABRIR_CF
 cls
