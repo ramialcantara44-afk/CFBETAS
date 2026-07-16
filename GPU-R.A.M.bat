@@ -91,30 +91,43 @@ powershell -Command "Checkpoint-Computer -Description 'GPU-RAM_Otimizacao' -Rest
 pause
 goto :MENU
 
-:INICIAR_JOGO
-echo Iniciando jogo...
-:: Remove espaços do caminho salvo no arquivo
-for /f "usebackq tokens=* delims=" %%A in ("%CONFIG_FILE%") do set "PATH_EXEC=%%~fA"
+:ABRIR_CF
+cls
+set "CONFIG_DIR=%USERPROFILE%\Documents\Cross Fire"
+set "CONFIG_FILE=%CONFIG_DIR%\config_cf.txt"
 
-:: Verifica se o arquivo realmente existe
-if not exist "%PATH_EXEC%" (
-    echo [ERRO] O caminho salvo nao existe: "%PATH_EXEC%" 
-    del "%CONFIG_FILE%"
-    pause
+:: Verifica se o arquivo de configuração existe e é válido
+if exist "%CONFIG_FILE%" (
+    set /p CF_EXEC=<"%CONFIG_FILE%"
+    if exist "!CF_EXEC!" goto :INICIAR_JOGO
+)
+
+:: Se não encontrado, pede o disco e busca novamente
+echo.
+set /p "LETRA=Disco do jogo nao configurado. Digite a letra do disco (ex: C): "
+echo Buscando cfPT_launcher.exe... Aguarde.
+
+set "CF_EXEC="
+for /f "delims=" %%f in ('dir /s /b "%LETRA%:\cfPT_launcher.exe" 2^>nul') do (
+    set "CF_EXEC=%%f"
+)
+
+if not defined CF_EXEC (
+    echo Arquivo nao encontrado! Pressione qualquer tecla para voltar.
+    pause >nul
     goto :MENU
 )
 
-:: Execução direta com tratamento de pasta
-set "FOLDER=%~dpA"
-echo Indo para a pasta: "%FOLDER%"
-cd /d "%FOLDER%"
-echo Executando o arquivo...
-start "" "cfPT_launcher.exe"
+if not exist "%CONFIG_DIR%" mkdir "%CONFIG_DIR%"
+echo %CF_EXEC%>%CONFIG_FILE%
 
-:: Pausa para ver o que aconteceu antes de ir para o menu
-echo Pressione qualquer tecla para retornar ao menu.
-pause
-goto :MENU_JOGO
+:INICIAR_JOGO
+echo Iniciando: "%CF_EXEC%"
+start "" "%CF_EXEC%"
+echo.
+echo Jogo iniciado. Pressione qualquer tecla para voltar ao menu.
+pause >nul
+goto :MENU
 
 :GERENCIAR_DXVK
 cls
