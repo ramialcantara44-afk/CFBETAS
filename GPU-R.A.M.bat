@@ -1,5 +1,5 @@
 @echo off
-:: Se o argumento for "MENU_JOGO", pula direto para o painel
+:: --- CORRECAO PARA NAO PISCAR: Pula direto para o Painel se receber o comando ---
 if "%~1"=="MENU_JOGO" goto :MENU_JOGO
 
 setlocal EnableDelayedExpansion
@@ -13,31 +13,77 @@ if %errorLevel% NEQ 0 (
     exit
 )
 
-:: ==================== MENU PRINCIPAL ====================
-:MENU
+:: ==================== AUTO UPDATE ====================
+echo Verificando atualizacoes...
+set "RAW_URL=https://raw.githubusercontent.com/ramialcantara44-afk/CFBETAS/refs/heads/main/GPU-R.A.M.bat"
+set "NEW_FILE=%~dp0GPU-R.A.M_NEW.bat"
+powershell -Command "(New-Object System.Net.WebClient).DownloadFile('%RAW_URL%?v=%random%', '%NEW_FILE%')" >nul 2>&1
+if exist "%NEW_FILE%" (
+    fc "%~f0" "%NEW_FILE%" >nul 2>&1
+    if errorlevel 1 (
+        echo Nova versao encontrada! Atualizando...
+        powershell -Command "Start-Sleep -Seconds 2; Move-Item -Path '%NEW_FILE%' -Destination '%~f0' -Force; Start-Process '%~f0'"
+        exit
+    ) else ( del "%NEW_FILE%" >nul 2>&1 )
+)
+
+:: ==================== CONFIGURACOES GERAIS ====================
+for /F %%a in ('echo prompt $E ^| cmd') do set "esc=%%a"
+
 cls
+for /L %%i in (1,1,6) do (
+    set /a "r=%random% %% 255", "g=%random% %% 255", "b=%random% %% 255"
+    echo.
+    echo           %esc%[38;2;!r!;!g!;!b%m%     CARREGANDO... [%%i/6] %esc%[0m
+    timeout /t 1 >nul
+)
+
+:MENU
+set /a "r=%random% %% 255", "g=%random% %% 255", "b=%random% %% 255"
+set "rgb=%esc%[38;2;%r%;%g%;%b%m"
+set "reset=%esc%[0m"
+
+cls
+echo %rgb%
+echo           █████╗ ███╗   ██╗████████╗██╗  ██████╗  █████╗ 
+echo           ██╔══██╗████╗  ██║╚══██╔══╝██║ ██╔════╝ ██╔══██╗
+echo           ███████║██╔██╗ ██║   ██║   ██║ ██║  ███╗███████║
+echo           ██╔══██║██║╚████║   ██║   ██║ ██║   ██║██╔══██║
+echo           ██║  ██║██║ ╚███║   ██║   ██║ ╚██████╔╝██║  ██║
+echo           ╚═╝  ╚═╝╚═╝  ╚═══╝   ╚═╝   ╚═╝  ╚═════╝ ╚═╝  ╚═╝
+echo           COPYRIGHT (C) 2026. TODOS OS DIREITOS RESERVADOS.
 echo ==================================================
-echo           BETA - OTIMIZACAO (MENU PRINCIPAL)
+echo %esc%[38;2;0;255;0m    [1] OTIMIZAR (PROFUNDO)%reset%
+echo %esc%[38;2;255;0;0m          [2] CRIAR PONTO DE RESTAURACAO%reset%
+echo %esc%[38;2;255;255;0m              [3] ABRIR CROSSFIRE%reset%
+echo %esc%[38;2;128;128;128m                [4] GERENCIAR DXVK (VULKAN)%reset%
+echo %esc%[38;2;255;255;255m                 [5] SAIR%reset%
 echo ==================================================
-echo [1] OTIMIZAR [2] BACKUP [3] ABRIR JOGO [4] SAIR
-set /p opt="Escolha: "
-if "%opt%"=="1" goto :OTIMIZAR
+set /p opt="Escolha uma opcao: "
+if "%opt%"=="1" goto :CONFIRMAR_OTIMIZAR
 if "%opt%"=="2" goto :PREPARAR_BACKUP
 if "%opt%"=="3" goto :ABRIR_CF
-if "%opt%"=="4" exit
+if "%opt%"=="4" goto :GERENCIAR_DXVK
+if "%opt%"=="5" exit
+goto :MENU
+
+:CONFIRMAR_OTIMIZAR
+cls
+echo %esc%[38;2;255;0;0m!!! ATENCAO: MODIFICACOES PROFUNDAS NO SISTEMA !!!%reset%
+set /p confirm="Deseja prosseguir? (S/N): "
+if /i "%confirm%"=="S" goto :OTIMIZAR
 goto :MENU
 
 :OTIMIZAR
-echo Aplicando otimizaçoes...
+echo APLICANDO OTIMIZACOES...
 powercfg /setactive SCHEME_MIN
 reg add "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management" /v DisablePagingExecutive /t REG_DWORD /d 1 /f >nul 2>&1
-echo Otimizado!
+echo OTIMIZACAO CONCLUIDA!
 pause
 goto :MENU
 
 :PREPARAR_BACKUP
 powershell -Command "Checkpoint-Computer -Description 'Backup_RAM_Total' -RestorePointType 'MODIFY_SETTINGS'"
-echo Ponto de restauracao criado!
 pause
 goto :MENU
 
@@ -57,26 +103,26 @@ for %%I in ("%CF_EXEC%") do set "JOGO_PASTA=%%~dpI"
 pushd "%JOGO_PASTA%"
 start "" "cfPT_launcher.exe"
 popd
-:: Abre uma nova janela do mesmo script passando o argumento MENU_JOGO
+:: --- ABRIR PAINEL EM JANELA SEPARADA ---
 start "PAINEL DE OTIMIZACAO" "%~f0" MENU_JOGO
-:: Fecha a janela principal que abriu o jogo
 exit
 
-:: ==================== PAINEL DO JOGADOR (NOVA JANELA) ====================
+:: ==================== PAINEL DO JOGADOR ====================
 :MENU_JOGO
-mode con: cols=60 lines=15
 cls
-echo ==================================================
-echo        PAINEL DE OTIMIZACAO DO JOGADOR
-echo ==================================================
+echo --- PAINEL DE OTIMIZACAO DO JOGADOR ---
 echo [1] Limpar Memoria RAM
 echo [2] Fechar Jogo e Sair
 echo [3] Gerenciar Explorer
-echo [4] Sair do Painel
-echo ==================================================
+echo [4] Sair
 set /p j_op="Escolha: "
-if "%j_op%"=="1" (taskkill /f /im chrome.exe /im msedge.exe /im discord.exe /im steam.exe >nul 2>&1 & echo Limpeza ok! & timeout /t 1 >nul & goto :MENU_JOGO)
+if "%j_op%"=="1" (taskkill /f /im chrome.exe /im msedge.exe /im discord.exe /im steam.exe >nul 2>&1 & goto :MENU_JOGO)
 if "%j_op%"=="2" (taskkill /f /im cfPT_launcher.exe >nul 2>&1 & start "" explorer.exe & exit)
 if "%j_op%"=="3" (taskkill /f /im explorer.exe >nul 2>&1 & timeout /t 1 >nul & start "" explorer.exe & goto :MENU_JOGO)
 if "%j_op%"=="4" exit
 goto :MENU_JOGO
+
+:GERENCIAR_DXVK
+echo Em desenvolvimento...
+pause
+goto :MENU
