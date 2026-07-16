@@ -1,13 +1,14 @@
 @echo off
+setlocal EnableDelayedExpansion
+
+:: --- VERIFICACAO DE ADM (Sem loop) ---
 net session >nul 2>&1
-if %errorLevel% == 0 (
-    goto :admin_ok
-) else (
-    echo Pedindo privilegios de administrador...
-    powershell start -verb runas '%0'
+if %errorLevel% neq 0 (
+    echo [!] ERRO: Este script precisa de privilegios de Administrador.
+    echo [!] Por favor, clique com o botao direito no arquivo e selecione "Executar como Administrador".
+    pause
     exit
 )
-:admin_ok
 setlocal EnableDelayedExpansion
 chcp 65001 >nul
 title BETA - OTIMIZACAO
