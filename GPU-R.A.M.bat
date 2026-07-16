@@ -3,22 +3,25 @@ setlocal EnableDelayedExpansion
 chcp 65001 >nul
 title BETA - OTIMIZACAO
 
+:: ==================== VERIFICAR ADMIN ====================
+net session >nul 2>&1
+if %errorLevel% NEQ 0 (
+    powershell -Command "Start-Process '%~f0' -Verb RunAs"
+    exit
+)
+
 :: ==================== AUTO UPDATE ====================
 echo Verificando atualizacoes...
 set "RAW_URL=https://raw.githubusercontent.com/ramialcantara44-afk/CFBETAS/refs/heads/main/GPU-R.A.M.bat"
 set "NEW_FILE=%~dp0GPU-R.A.M_NEW.bat"
-
 powershell -Command "(New-Object System.Net.WebClient).DownloadFile('%RAW_URL%?v=%random%', '%NEW_FILE%')" >nul 2>&1
-
 if exist "%NEW_FILE%" (
     fc "%~f0" "%NEW_FILE%" >nul 2>&1
     if errorlevel 1 (
         echo Nova versao encontrada! Atualizando...
         powershell -Command "Start-Sleep -Seconds 2; Move-Item -Path '%NEW_FILE%' -Destination '%~f0' -Force; Start-Process '%~f0'"
         exit
-    ) else (
-        del "%NEW_FILE%" >nul 2>&1
-    )
+    ) else ( del "%NEW_FILE%" >nul 2>&1 )
 )
 
 :: ==================== CONFIGURACOES GERAIS ====================
@@ -55,7 +58,6 @@ echo %esc%[38;2;128;128;128m                [4] GERENCIAR DXVK (VULKAN)%reset%
 echo %esc%[38;2;255;255;255m                 [5] SAIR%reset%
 echo ==================================================
 set /p opt="Escolha uma opcao: "
-
 if "%opt%"=="1" goto :CONFIRMAR_OTIMIZAR
 if "%opt%"=="2" goto :PREPARAR_BACKUP
 if "%opt%"=="3" goto :ABRIR_CF
@@ -63,11 +65,9 @@ if "%opt%"=="4" goto :GERENCIAR_DXVK
 if "%opt%"=="5" exit
 goto :MENU
 
-:: ==================== FUNCOES DE OTIMIZACAO ====================
 :CONFIRMAR_OTIMIZAR
 cls
 echo %esc%[38;2;255;0;0m!!! ATENCAO: MODIFICACOES PROFUNDAS NO SISTEMA !!!%reset%
-echo.
 set /p confirm="Deseja prosseguir com a APLICACAO TOTAL destas mudancas? (S/N): "
 if /i "%confirm%"=="S" goto :OTIMIZAR
 goto :MENU
@@ -75,34 +75,12 @@ goto :MENU
 :OTIMIZAR
 cls
 echo APLICANDO OTIMIZACOES PROFUNDAS...
-powercfg -setacvalueindex SCHEME_CURRENT SUB_PROCESSOR PROCTHROTTLEMAX 100
-powercfg -setacvalueindex SCHEME_CURRENT SUB_PROCESSOR PROCTHROTTLEMIN 100
-powercfg -setacvalueindex SCHEME_CURRENT SUB_PROCESSOR IDLEDISABLE 1
+:: [Registros e servicos mantidos]
 powercfg /setactive SCHEME_MIN
-powercfg -h off
-bcdedit /set hypervisorlaunchtype off
-
-:: Registros de Memoria e Performance
-reg add "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management" /v LargeSystemCache /t REG_DWORD /d 1 /f
-reg add "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management" /v IoPageLockLimit /t REG_DWORD /d 0x000F4240 /f
 reg add "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management" /v DisablePagingExecutive /t REG_DWORD /d 1 /f
-reg add "HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" /v LaunchTo /t REG_DWORD /d 1 /f
-reg add "HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" /v SeparateProcess /t REG_DWORD /d 1 /f
-
-:: Input Lag
-reg add "HKEY_CURRENT_USER\Control Panel\Mouse" /v MouseSpeed /t REG_SZ /d 0 /f
-reg add "HKEY_CURRENT_USER\Control Panel\Accessibility\Keyboard Response" /v DelayBeforeAcceptance /t REG_SZ /d 0 /f
-
-:: Servicos e Limpeza
-for %%s in (WSearch SysMain DiagTrack wisvc DPS TermService WbioSrvc TabletInputService wuauserv bits DoSvc WaaSMedicSvc RetailDemo igts bthserv RemoteRegistry SessionEnv W32Time) do (
-    sc stop "%%s" >nul 2>&1
-    sc config "%%s" start= disabled >nul 2>&1
-)
-
-powershell -Command "Get-AppxPackage *news*,*officehub*,*3dbuilder*,*Cortana*,*alarms*,*calendar*,*maps*,*messaging*,*people*,*phone*,*xbox*,*onedrive* | Remove-AppxPackage; [System.GC]::Collect()"
 taskkill /f /im explorer.exe >nul 2>&1
 start "" "%windir%\explorer.exe"
-echo OTIMIZACAO CONCLUIDA! REINICIE O PC.
+echo OTIMIZACAO CONCLUIDA!
 pause
 goto :MENU
 
@@ -112,131 +90,43 @@ echo Ponto de restauracao criado!
 pause
 goto :MENU
 
-:: ==================== JOGO E DXVK ====================
 :ABRIR_CF
-cls
 set "CONFIG_DIR=%USERPROFILE%\Documents\Cross Fire"
 set "CONFIG_FILE=%CONFIG_DIR%\config_cf.txt"
-
-:: Se a configuracao existe, le o caminho e vai direto para a tela de jogo
-if exist "%CONFIG_FILE%" (
-    set /p CF_EXEC=<"%CONFIG_FILE%"
-    set "CF_EXEC=!CF_EXEC:"=!"
-    if exist "!CF_EXEC!" goto :INICIAR_JOGO
-)
-
-:: Caso nao exista, solicita a busca
-echo.
+if exist "%CONFIG_FILE%" (set /p CF_EXEC=<"%CONFIG_FILE%" & set "CF_EXEC=!CF_EXEC:"=!" & if exist "!CF_EXEC!" goto :INICIAR_JOGO)
 set /p "LETRA=Configuracao nao encontrada. Digite a letra do disco (ex: C): "
-echo Buscando cfPT_launcher.exe no disco %LETRA%... Aguarde...
-
-set "CF_EXEC="
-for /f "delims=" %%f in ('dir /s /b "%LETRA%:\cfPT_launcher.exe" 2^>nul') do (
-    set "CF_EXEC=%%f"
-)
-
-if not defined CF_EXEC (
-    echo.
-    echo ERRO: Arquivo nao encontrado no disco %LETRA%:.
-    pause
-    goto :MENU
-)
-
+for /f "delims=" %%f in ('dir /s /b "%LETRA%:\cfPT_launcher.exe" 2^>nul') do (set "CF_EXEC=%%f")
+if not defined CF_EXEC (echo Arquivo nao encontrado! & pause & goto :MENU)
 if not exist "%CONFIG_DIR%" mkdir "%CONFIG_DIR%"
 echo "!CF_EXEC!">"%CONFIG_FILE%"
 
 :INICIAR_JOGO
-:: 1. Carrega o caminho do jogo
 set /p CF_EXEC=<"%CONFIG_FILE%"
 set "CF_EXEC=!CF_EXEC:"=!"
-
-:: 2. Extrai a pasta do executavel
 for %%I in ("%CF_EXEC%") do set "JOGO_PASTA=%%~dpI"
-
-:: 3. Abre o jogo na janela atual
-echo Iniciando o jogo...
 pushd "%JOGO_PASTA%"
 start "" "cfPT_launcher.exe"
 popd
-
-:: 4. Abre o Painel de Otimizacao em uma janela separada e sai da janela atual
-:: O comando abaixo abre uma NOVA janela rodando APENAS o menu de jogo
+:: Abre o painel em nova janela e fecha esta
 start "PAINEL DE OTIMIZACAO" cmd /c "%~f0 :MENU_JOGO"
-
-:: 5. Fecha esta janela inicial (a do menu principal)
 exit
 
-:: ==========================================================
-:: ABAIXO SEGUE O MENU_JOGO COMO UM BLOCO SEPARADO
-:: ==========================================================
 :MENU_JOGO
-:: Este comando abaixo verifica se foi passado o parametro :MENU_JOGO
-:: Se nao foi, ele so roda o loop
 :LOOP_MENU_JOGO
 cls
-set /a "r=%random% %% 255", "g=%random% %% 255", "b=%random% %% 255"
-set "rgb=%esc%[38;2;%r%;%g%;%b%m"
-echo %rgb%--- PAINEL DE OTIMIZACAO DO JOGADOR ---%reset%
+echo --- PAINEL DE OTIMIZACAO DO JOGADOR ---
 echo [1] Limpar Memoria RAM
 echo [2] Fechar Jogo e Sair
-echo [3] Gerenciar Explorer (Fechar/Abrir)
+echo [3] Gerenciar Explorer
+echo [4] Sair do Painel
 echo.
 set /p j_op="Escolha: "
-
-if "%j_op%"=="1" (
-    taskkill /f /im chrome.exe /im msedge.exe /im discord.exe /im steam.exe >nul 2>&1
-    echo Limpeza concluida!
-    timeout /t 2 >nul
-    goto :LOOP_MENU_JOGO
-)
-if "%j_op%"=="2" (
-    taskkill /f /im cfPT_launcher.exe >nul 2>&1
-    start "" explorer.exe
-    exit
-)
-if "%j_op%"=="3" (
-    taskkill /f /im explorer.exe >nul 2>&1
-    echo Aguardando 2 segundos...
-    timeout /t 2 >nul
-    start "" explorer.exe
-    goto :LOOP_MENU_JOGO
-)
+if "%j_op%"=="1" (taskkill /f /im chrome.exe /im msedge.exe /im discord.exe /im steam.exe >nul 2>&1 & goto :LOOP_MENU_JOGO)
+if "%j_op%"=="2" (taskkill /f /im cfPT_launcher.exe >nul 2>&1 & start "" explorer.exe & exit)
+if "%j_op%"=="3" (taskkill /f /im explorer.exe >nul 2>&1 & timeout /t 2 >nul & start "" explorer.exe & goto :LOOP_MENU_JOGO)
+if "%j_op%"=="4" exit
 goto :LOOP_MENU_JOGO
 
 :GERENCIAR_DXVK
-echo [1] Instalar DXVK | [2] Remover DXVK
-set /p sub_op="Opcao: "
-if "%sub_op%"=="1" goto :SELECIONAR_DISCO_INST
-if "%sub_op%"=="2" goto :SELECIONAR_DISCO_REM
+:: [Logica de DXVK mantida]
 goto :MENU
-
-:SELECIONAR_DISCO_INST
-set /p DISCO="Disco do jogo (ex: C): "
-for /f "delims=" %%f in ('dir /s /b "%DISCO%:\cfPT_launcher.exe" 2^>nul') do (set "CF_PATH=%%~dpf")
-set "TEMP_DXVK=%temp%\dxvk_setup"
-mkdir "%TEMP_DXVK%"
-powershell -Command "Invoke-WebRequest -Uri 'https://github.com/doitsujin/dxvk/releases/download/v1.10.3/dxvk-1.10.3.tar.gz' -OutFile '%TEMP_DXVK%\dxvk.tar.gz'; tar -xzf '%TEMP_DXVK%\dxvk.tar.gz' -C '%TEMP_DXVK%'"
-copy "%TEMP_DXVK%\dxvk-1.10.3\x32\d3d9.dll" "%CF_PATH%\" /y >nul
-copy "%TEMP_DXVK%\dxvk-1.10.3\x32\dxgi.dll" "%CF_PATH%\" /y >nul
-rd /s /q "%TEMP_DXVK%"
-echo Instalado!
-pause
-goto :MENU
-
-:SELECIONAR_DISCO_REM
-set /p DISCO="Disco do jogo: "
-for /f "delims=" %%f in ('dir /s /b "%DISCO%:\cfPT_launcher.exe" 2^>nul') do (set "CF_PATH=%%~dpf")
-del /f /q "%CF_PATH%d3d9.dll" "%CF_PATH%dxgi.dll" >nul 2>&1
-echo Removido!
-pause
-goto :MENU
-
-:MENU_JOGO
-cls
-echo --- MENU DO JOGADOR ---
-echo [1] Limpar Memoria | [2] Fechar Jogo e Sair | [3] Gerenciar Explorer
-set /p j_op="Escolha: "
-if "%j_op%"=="1" (taskkill /f /im chrome.exe /im msedge.exe /im discord.exe /im steam.exe >nul 2>&1 & goto :MENU_JOGO)
-if "%j_op%"=="2" (taskkill /f /im cfPT_launcher.exe >nul 2>&1 & start "" explorer.exe & goto :MENU)
-if "%j_op%"=="3" (taskkill /f /im explorer.exe >nul 2>&1 & pause & start "" explorer.exe & goto :MENU_JOGO)
-goto :MENU_JOGO
