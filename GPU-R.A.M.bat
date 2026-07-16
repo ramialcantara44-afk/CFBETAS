@@ -93,26 +93,26 @@ goto :MENU
 
 :ABRIR_CF
 cls
-:: Define onde salvar a configuração (na pasta Documentos do usuário)
 set "CONFIG_DIR=%USERPROFILE%\Documents\Cross Fire"
 set "CONFIG_FILE=%CONFIG_DIR%\config_cf.txt"
 
-if not exist "%CONFIG_DIR%" mkdir "%CONFIG_DIR%"
-
-:: Se já tiver configurado antes, ele pula direto para o jogo
+:: Verifica se já existe um caminho salvo
 if exist "%CONFIG_FILE%" (
     set /p CF_EXEC=<"%CONFIG_FILE%"
-    goto :INICIAR_JOGO
+    if exist "!CF_EXEC!" goto :INICIAR_JOGO
 )
 
+:: Se não existe ou o arquivo não foi encontrado, solicita o disco
 echo.
-set /p "LETRA=Digite a letra do disco (ex: C): "
+echo [!] Arquivo nao configurado ou nao encontrado.
+set /p "LETRA=Digite a letra do disco onde esta o Crossfire (ex: C): "
 echo.
-echo Buscando cfPT_launcher.exe no disco %LETRA%... Aguarde...
+echo Buscando cfPT_launcher.exe no disco %LETRA%... Isso pode demorar um pouco.
 
-:: Varredura via PowerShell (mais eficiente e imune a erros de permissão)
-for /f "delims=" %%i in ('powershell -Command "Get-ChildItem -Path '%LETRA%:\' -Filter 'cfPT_launcher.exe' -Recurse -ErrorAction SilentlyContinue | Select-Object -ExpandProperty FullName -First 1"') do (
-    set "CF_EXEC=%%i"
+:: Varredura profunda usando DIR para maior compatibilidade
+set "CF_EXEC="
+for /f "delims=" %%f in ('dir /s /b "%LETRA%:\cfPT_launcher.exe" 2^>nul') do (
+    set "CF_EXEC=%%f"
 )
 
 if not defined CF_EXEC (
@@ -122,8 +122,14 @@ if not defined CF_EXEC (
     goto :MENU
 )
 
-:: Salva o caminho encontrado para nao precisar buscar na próxima vez
+:: Cria a pasta de configuração se não existir e salva o caminho
+if not exist "%CONFIG_DIR%" mkdir "%CONFIG_DIR%"
 echo %CF_EXEC%>%CONFIG_FILE%
+
+:INICIAR_JOGO
+echo Iniciando jogo...
+start "" "%CF_EXEC%"
+goto :MENU_JOGO
 
 :INICIAR_JOGO
 :: Executa o jogo usando o caminho salvo/encontrado
