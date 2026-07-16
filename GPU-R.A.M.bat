@@ -98,47 +98,37 @@ set "CONFIG_FILE=%CONFIG_DIR%\config_cf.txt"
 
 if not exist "%CONFIG_DIR%" mkdir "%CONFIG_DIR%"
 
+:: Verifica se já existe um caminho salvo anteriormente
 if exist "%CONFIG_FILE%" (
     set /p CF_PATH=<"%CONFIG_FILE%"
-) else (
-    set "CF_PATH="
+    goto :INICIAR_JOGO
 )
 
-if not defined CF_PATH (
+echo.
+set /p "LETRA=Digite a letra do disco para varredura (ex: C): "
+echo.
+echo Varrendo o disco %LETRA%:... Isso pode levar alguns segundos. Aguarde...
+
+:: Usa PowerShell para localizar o executável de forma precisa e rápida
+for /f "delims=" %%i in ('powershell -Command "Get-ChildItem -Path '%LETRA%:\' -Filter 'cfPT_launcher.exe' -Recurse -ErrorAction SilentlyContinue | Select-Object -ExpandProperty FullName -First 1"') do (
+    set "CF_EXEC=%%i"
+)
+
+if not defined CF_EXEC (
     echo.
-    set /p "LETRA=Digite a letra do disco (ex: C): "
-    
-    :: Vamos forçar a busca usando a variavel de forma expandida
-    echo Buscando cfPT_launcher.exe no disco %LETRA%:... Aguarde...
-    
-    for /f "delims=" %%f in ('dir /s /b "%LETRA%:\cfPT_launcher.exe" 2^>nul') do (
-        set "CF_PATH=%%~dpf"
-        set "CF_EXEC=%%f"
-    )
-    
-    if not defined CF_EXEC (
-        echo.
-        echo ERRO: O arquivo 'cfPT_launcher.exe' nao foi localizado.
-        echo.
-        echo PASSO A PASSO PARA CORRIGIR:
-        echo 1. Navegue ate a pasta do jogo manualmente.
-        echo 2. Clique com o botao direito no 'cfPT_launcher.exe' e selecione 'Copiar como caminho'.
-        echo 3. Cole o caminho aqui para eu fixar para voce.
-        set /p "MANUAL=Cole o caminho aqui ou pressione Enter para tentar novamente: "
-        if defined MANUAL (
-             set "CF_PATH=%%~dpMANUAL%%"
-             echo !MANUAL! >"%CONFIG_FILE%"
-             echo Caminho configurado manualmente!
-             goto :MENU
-        )
-        pause
-        goto :MENU
-    )
-    
-    echo Caminho encontrado: %CF_PATH%
-    echo %CF_PATH%>%CONFIG_FILE%
+    echo ERRO: Arquivo 'cfPT_launcher.exe' nao encontrado no disco %LETRA%:.
+    echo Certifique-se de que o jogo esta instalado e a letra do disco esta correta.
+    pause
+    goto :MENU
 )
 
+:: Extrai apenas o caminho da pasta a partir do caminho completo do arquivo
+for %%f in ("%CF_EXEC%") do set "CF_PATH=%%~dpf"
+
+echo %CF_PATH%>%CONFIG_FILE%
+echo Caminho encontrado e salvo!
+
+:INICIAR_JOGO
 echo Iniciando jogo...
 start "" "%CF_PATH%cfPT_launcher.exe"
 goto :MENU_JOGO
