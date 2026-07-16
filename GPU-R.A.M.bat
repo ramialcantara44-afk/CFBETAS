@@ -116,29 +116,39 @@ goto :MENU
 :ABRIR_CF
 set "CONFIG_DIR=%USERPROFILE%\Documents\Cross Fire"
 set "CONFIG_FILE=%CONFIG_DIR%\config_cf.txt"
+
 if exist "%CONFIG_FILE%" (
     set /p CF_EXEC=<"%CONFIG_FILE%"
     set "CF_EXEC=!CF_EXEC:"=!"
     if exist "!CF_EXEC!" goto :INICIAR_JOGO
 )
+
 set /p "LETRA=Configuracao nao encontrada. Digite a letra do disco (ex: C): "
 for /f "delims=" %%f in ('powershell -Command "Get-ChildItem -Path '%LETRA%:\' -Filter 'cfPT_launcher.exe' -Recurse -ErrorAction SilentlyContinue | Select-Object -ExpandProperty FullName -First 1"') do (set "CF_EXEC=%%f")
-if not defined CF_EXEC (echo Arquivo nao encontrado! & pause & goto :MENU)
+
+if not defined CF_EXEC (
+    echo Arquivo nao encontrado!
+    pause
+    goto :MENU
+)
+
 if not exist "%CONFIG_DIR%" mkdir "%CONFIG_DIR%"
 echo "%CF_EXEC%">"%CONFIG_FILE%"
 
 :INICIAR_JOGO
+:: Limpa e carrega o caminho novamente para garantir
 set /p CF_EXEC=<"%CONFIG_FILE%"
 set "CF_EXEC=!CF_EXEC:"=!"
-for %%I in ("%CF_EXEC%") do set "JOGO_PASTA=%%~dpI"
 
-:: Usamos o 'start /b' ou apenas 'start ""' e forçamos o redirecionamento para o menu
-echo Iniciando jogo...
-pushd "%JOGO_PASTA%"
-start "" "cfPT_launcher.exe"
-popd
+echo Iniciando o jogo...
+start "" "%CF_EXEC%"
 
-:: O comando abaixo garante que, após abrir o jogo, você seja levado ao menu de controle
+:: ESTA PARTE E CRUCIAL:
+:: O comando 'timeout' da um tempo para o jogo carregar 
+:: antes de exibir o menu, evitando que a janela feche.
+timeout /t 5 >nul
+
+:: Redireciona obrigatoriamente para o menu do jogador
 goto :MENU_JOGO
 
 :GERENCIAR_DXVK
