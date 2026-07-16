@@ -146,30 +146,40 @@ if not exist "%CONFIG_DIR%" mkdir "%CONFIG_DIR%"
 echo "!CF_EXEC!">"%CONFIG_FILE%"
 
 :INICIAR_JOGO
-:: Carrega o caminho
+:: 1. Carrega o caminho do jogo
 set /p CF_EXEC=<"%CONFIG_FILE%"
 set "CF_EXEC=!CF_EXEC:"=!"
 
-echo Iniciando o jogo e abrindo o Painel de Otimizacao...
+:: 2. Extrai a pasta do executavel
+for %%I in ("%CF_EXEC%") do set "JOGO_PASTA=%%~dpI"
 
-:: AQUI ESTA O SEGREDO: 
-:: O comando 'start' abaixo abre o seu próprio script em uma NOVA JANELA 
-:: especificamente no menu de jogo, sem fechar a atual.
-start "PAINEL DE OTIMIZACAO" "%~f0" :MENU_JOGO
+:: 3. Abre o jogo na janela atual
+echo Iniciando o jogo...
+pushd "%JOGO_PASTA%"
+start "" "cfPT_launcher.exe"
+popd
 
-:: Após abrir o painel, a janela original pode fechar ou voltar ao menu principal
+:: 4. Abre o Painel de Otimizacao em uma janela separada e sai da janela atual
+:: O comando abaixo abre uma NOVA janela rodando APENAS o menu de jogo
+start "PAINEL DE OTIMIZACAO" cmd /c "%~f0 :MENU_JOGO"
+
+:: 5. Fecha esta janela inicial (a do menu principal)
 exit
 
+:: ==========================================================
+:: ABAIXO SEGUE O MENU_JOGO COMO UM BLOCO SEPARADO
+:: ==========================================================
 :MENU_JOGO
-:: Esta parte so sera executada na nova janela que abrimos acima
-cls
+:: Este comando abaixo verifica se foi passado o parametro :MENU_JOGO
+:: Se nao foi, ele so roda o loop
 :LOOP_MENU_JOGO
+cls
 set /a "r=%random% %% 255", "g=%random% %% 255", "b=%random% %% 255"
 set "rgb=%esc%[38;2;%r%;%g%;%b%m"
-echo %rgb%--- MENU DO JOGADOR (ATIVO) ---%reset%
+echo %rgb%--- PAINEL DE OTIMIZACAO DO JOGADOR ---%reset%
 echo [1] Limpar Memoria RAM
 echo [2] Fechar Jogo e Sair
-echo [3] Gerenciar Explorer
+echo [3] Gerenciar Explorer (Fechar/Abrir)
 echo.
 set /p j_op="Escolha: "
 
@@ -186,7 +196,8 @@ if "%j_op%"=="2" (
 )
 if "%j_op%"=="3" (
     taskkill /f /im explorer.exe >nul 2>&1
-    pause
+    echo Aguardando 2 segundos...
+    timeout /t 2 >nul
     start "" explorer.exe
     goto :LOOP_MENU_JOGO
 )
