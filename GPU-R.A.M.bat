@@ -93,9 +93,43 @@ goto :MENU
 
 :ABRIR_CF
 cls
-set /p DISCO="Digite a letra do disco do CF (ex: C): "
-for /f "delims=" %%f in ('dir /s /b "%DISCO%:\cfPT_launcher.exe" 2^>nul') do (start "" "%%f")
-goto :MENU
+:: Define o caminho da pasta e do arquivo de configuracao
+set "CONFIG_DIR=%USERPROFILE%\Documents\Cross Fire"
+set "CONFIG_FILE=%CONFIG_DIR%\config_cf.txt"
+
+:: Cria a pasta caso nao exista
+if not exist "%CONFIG_DIR%" mkdir "%CONFIG_DIR%"
+
+:: Verifica se o arquivo de configuracao existe
+if exist "%CONFIG_FILE%" (
+    set /p CF_PATH=<"%CONFIG_FILE%"
+) else (
+    set "CF_PATH="
+)
+
+:: Se nao encontrou o caminho salvo, pergunta ao usuario
+if not defined CF_PATH (
+    set /p DISCO="Disco nao configurado. Digite a letra do disco do CF (ex: C): "
+    echo Buscando cfPT_launcher.exe no disco %DISCO%... 
+    for /f "delims=" %%f in ('dir /s /b "%DISCO%:\cfPT_launcher.exe" 2^>nul') do ( 
+        set "CF_PATH=%%~dpf"
+    )
+    
+    if not defined CF_PATH (
+        echo Arquivo nao encontrado!
+        pause
+        goto :MENU
+    )
+    
+    :: Salva o caminho encontrado no arquivo em Documentos
+    echo %CF_PATH%>%CONFIG_FILE%
+)
+
+echo Iniciando jogo a partir de: %CF_PATH% 
+pushd "%CF_PATH%"
+start "" "cfPT_launcher.exe" 
+popd
+goto :MENU_JOGO
 
 :GERENCIAR_DXVK
 cls
