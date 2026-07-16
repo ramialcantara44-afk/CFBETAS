@@ -95,63 +95,31 @@ goto :EOF
 
 :MODO_JOGO
 cls
-echo Otimizando sistema para o Jogo...
-call :OTIMIZAR
+echo Otimizando sistema e fechando processos...
 
-echo [1/4] Finalizando aplicativos desnecessarios...
+:: Finaliza navegadores e apps com /F (Forçar) e /T (Processo e filhos) 
 taskkill /f /im chrome.exe /t >nul 2>&1
 taskkill /f /im msedge.exe /t >nul 2>&1
 taskkill /f /im discord.exe /t >nul 2>&1
+taskkill /f /im steam.exe /t >nul 2>&1
 
-echo [2/4] Limpando cache...
-del /q /s /f "%temp%\*.*" >nul 2>&1
+:: Desativa serviços pesados [cite: 12]
+sc stop "WSearch" >nul 2>&1
+sc config "WSearch" start= disabled >nul 2>&1
+sc stop "SysMain" >nul 2>&1
+sc config "SysMain" start= disabled >nul 2>&1
 
-echo [3/4] Liberando RAM (Finalizando Explorer)...
+:: Finaliza o Explorer e espera 2 segundos para garantir o fechamento 
 taskkill /f /im explorer.exe >nul 2>&1
+timeout /t 2 >nul
 
-echo [4/4] Iniciando Crossfire...
-:: Mantemos a lógica que funcionou para você
+:: Inicia o Crossfire [cite: 13]
 for /f "delims=" %%f in ('dir /s /b "%DISCO%:\cfPT_launcher.exe" 2^>nul') do (set "CF_EXEC=%%f" & set "CF_PATH=%%~dpf")
 pushd "%CF_PATH%"
 start "" "cfPT_launcher.exe"
 popd
 
-:: Volta para o menu de controle do jogador
 goto :MENU_JOGO
-
-:ABRIR_CF
-cls
-set "CONFIG_DIR=%USERPROFILE%\Documents\Cross Fire"
-set "CONFIG_FILE=%CONFIG_DIR%\config_cf.txt"
-
-:: Verifica se o arquivo de configuração existe e tenta ler o caminho
-if exist "%CONFIG_FILE%" (
-    set /p CF_EXEC=<"%CONFIG_FILE%"
-    :: Remove aspas existentes para padronizar
-    set "CF_EXEC=%CF_EXEC:"=%"
-    if exist "!CF_EXEC!" goto :INICIAR_JOGO
-)
-
-:: Caso nao exista ou nao seja valido, solicita a busca
-echo.
-set /p "LETRA=Configuracao nao encontrada. Digite a letra do disco (ex: C): "
-echo Buscando cfPT_launcher.exe no disco %LETRA%... Aguarde...
-
-set "CF_EXEC="
-for /f "delims=" %%f in ('powershell -Command "Get-ChildItem -Path '%LETRA%:\' -Filter 'cfPT_launcher.exe' -Recurse -ErrorAction SilentlyContinue | Select-Object -ExpandProperty FullName -First 1"') do (
-    set "CF_EXEC=%%f"
-)
-
-if not defined CF_EXEC (
-    echo.
-    echo ERRO: Arquivo 'cfPT_launcher.exe' nao encontrado no disco %LETRA%:.
-    pause
-    goto :MENU
-)
-
-:: Salva o caminho com aspas para evitar erros com espacos 
-if not exist "%CONFIG_DIR%" mkdir "%CONFIG_DIR%"
-echo "%CF_EXEC%">"%CONFIG_FILE%"
 
 :ABRIR_CF
 cls
