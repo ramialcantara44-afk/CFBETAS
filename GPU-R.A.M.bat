@@ -86,10 +86,25 @@ if not exist "%CONFIG_DIR%" mkdir "%CONFIG_DIR%"
 echo "%CF_EXEC%">"%CONFIG_FILE%"
 
 :INICIAR_JOGO
+:: Carrega o caminho do arquivo salvo
 set /p CF_EXEC=<"%CONFIG_FILE%"
 set "CF_EXEC=%CF_EXEC:"=%"
+
+:: Extrai o caminho da pasta onde o executavel esta
+for %%I in ("%CF_EXEC%") do set "JOGO_PASTA=%%~dpI"
+
+:: Finaliza o explorer para liberar memoria (opcional)
 taskkill /f /im explorer.exe >nul 2>&1
-start "" "%CF_EXEC%"
+
+:: Entra na pasta do jogo, inicia e volta para a pasta do script
+pushd "%JOGO_PASTA%"
+start "" "cfPT_launcher.exe"
+popd
+
+echo.
+echo Jogo iniciado! Se nao abrir, verifique se o antivirus bloqueou o arquivo.
+echo Pressione qualquer tecla para ir ao MENU DE JOGO.
+pause >nul
 goto :MENU_JOGO
 
 :MENU_JOGO
