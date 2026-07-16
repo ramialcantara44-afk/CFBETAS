@@ -106,24 +106,31 @@ if exist "%CONFIG_FILE%" (
 
 if not defined CF_PATH (
     echo.
-    set /p "DISCO=Digite a letra do disco (ex: C): "
+    set /p "LETRA=Digite a letra do disco (ex: C): "
     
-    echo Buscando o jogo no disco %DISCO%... aguarde...
+    :: Vamos forçar a busca usando a variavel de forma expandida
+    echo Buscando cfPT_launcher.exe no disco %LETRA%:... Aguarde...
     
-    :: Forçamos a busca procurando especificamente pelo launcher que você citou
-    for /f "delims=" %%f in ('dir /s /b "%DISCO%:\cfPT_launcher.exe" 2^>nul') do (
+    for /f "delims=" %%f in ('dir /s /b "%LETRA%:\cfPT_launcher.exe" 2^>nul') do (
         set "CF_PATH=%%~dpf"
         set "CF_EXEC=%%f"
     )
     
     if not defined CF_EXEC (
         echo.
-        echo ERRO: O arquivo 'cfPT_launcher.exe' nao foi encontrado no disco %DISCO%.
+        echo ERRO: O arquivo 'cfPT_launcher.exe' nao foi localizado.
         echo.
-        echo Tente buscar manualmente no seu PC:
-        echo 1. Abra o 'Meu Computador'.
-        echo 2. Digite 'cfPT_launcher' na barra de pesquisa.
-        echo 3. Veja se o nome e exatamente 'cfPT_launcher.exe'.
+        echo PASSO A PASSO PARA CORRIGIR:
+        echo 1. Navegue ate a pasta do jogo manualmente.
+        echo 2. Clique com o botao direito no 'cfPT_launcher.exe' e selecione 'Copiar como caminho'.
+        echo 3. Cole o caminho aqui para eu fixar para voce.
+        set /p "MANUAL=Cole o caminho aqui ou pressione Enter para tentar novamente: "
+        if defined MANUAL (
+             set "CF_PATH=%%~dpMANUAL%%"
+             echo !MANUAL! >"%CONFIG_FILE%"
+             echo Caminho configurado manualmente!
+             goto :MENU
+        )
         pause
         goto :MENU
     )
