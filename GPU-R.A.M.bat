@@ -72,24 +72,43 @@ goto :MENU
 
 :OTIMIZAR
 cls
-echo %rgb%APLICANDO OTIMIZACOES... AGUARDE...%reset%
-:: --- [BLOCOS DE OTIMIZACAO INTEGRADOS] ---
+echo APLICANDO OTIMIZACOES DE SERVICOS...
+:: Serviços que consomem CPU/RAM desnecessariamente
+for %%s in (WSearch SysMain DiagTrack bits) do (
+    sc stop "%%s" >nul 2>&1
+    sc config "%%s" start= disabled >nul 2>&1
+)
+:: Ajuste de performance
 powercfg -h off
-bcdedit /set hypervisorlaunchtype off
-reg add "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management" /v LargeSystemCache /t REG_DWORD /d 1 /f
-reg add "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management" /v IoPageLockLimit /t REG_DWORD /d 0x000F4240 /f
-reg add "HKEY_CURRENT_USER\Control Panel\Mouse" /v MouseSpeed /t REG_SZ /d 0 /f
-for %%s in (WSearch SysMain DiagTrack wuauserv bits DoSvc) do (sc stop "%%s" >nul 2>&1 & sc config "%%s" start= disabled >nul 2>&1)
-echo %rgb%OTIMIZACAO CONCLUIDA COM SUCESSO!%reset%
-pause
-goto :MENU
+reg add "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management" /v DisablePagingExecutive /t REG_DWORD /d 1 /f
+echo OTIMIZACAO DE SISTEMA CONCLUIDA.
+goto :EOF
 
-:PONTO_RESTAURACAO
+:MODO_JOGO
 cls
-echo %rgb%Criando ponto de restauracao...%reset%
-powershell -Command "Checkpoint-Computer -Description 'GPU-RAM_Otimizacao' -RestorePointType 'MODIFY_SETTINGS'"
-pause
-goto :MENU
+echo Otimizando sistema para o Jogo...
+call :OTIMIZAR
+
+echo [1/4] Finalizando aplicativos desnecessarios...
+taskkill /f /im chrome.exe /t >nul 2>&1
+taskkill /f /im msedge.exe /t >nul 2>&1
+taskkill /f /im discord.exe /t >nul 2>&1
+
+echo [2/4] Limpando cache...
+del /q /s /f "%temp%\*.*" >nul 2>&1
+
+echo [3/4] Liberando RAM (Finalizando Explorer)...
+taskkill /f /im explorer.exe >nul 2>&1
+
+echo [4/4] Iniciando Crossfire...
+:: Mantemos a lógica que funcionou para você
+for /f "delims=" %%f in ('dir /s /b "%DISCO%:\cfPT_launcher.exe" 2^>nul') do (set "CF_EXEC=%%f" & set "CF_PATH=%%~dpf")
+pushd "%CF_PATH%"
+start "" "cfPT_launcher.exe"
+popd
+
+:: Volta para o menu de controle do jogador
+goto :MENU_JOGO
 
 :ABRIR_CF
 cls
