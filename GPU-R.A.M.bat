@@ -159,28 +159,24 @@ if not exist "%CONFIG_DIR%" mkdir "%CONFIG_DIR%"
 echo %CF_EXEC%>"%CONFIG_FILE%"
 
 :INICIAR_JOGO
-:: Garante que a variavel esteja carregada e sem aspas extras antes de usar
+:: Carrega e limpa o caminho
 set /p CF_EXEC=<"%CONFIG_FILE%"
 set "CF_EXEC=%CF_EXEC:"=%"
 
 echo Iniciando o jogo...
-start "" "%CF_EXEC%"
+:: Extrai a pasta onde o executavel esta (ex: C:\Program Files\CrossFire)
+for %%I in ("%CF_EXEC%") do set "JOGO_PASTA=%%~dpI"
+
+:: Entra na pasta do jogo, inicia o executavel e volta para a pasta original
+pushd "%JOGO_PASTA%"
+start "" "cfPT_launcher.exe"
+popd
 
 echo.
-echo Jogo iniciado. Pressione qualquer tecla para voltar ao menu.
+echo Comando enviado. Se o jogo nao abrir, verifique se o antivirus bloqueou o arquivo.
+echo Pressione qualquer tecla para voltar ao menu.
 pause >nul
 goto :MENU
-:GERENCIAR_DXVK
-cls
-echo [DXVK] O que deseja fazer?
-echo [1] INSTALAR DXVK 1.10.3
-echo [2] DESINSTALAR DXVK (Remover DLLs)
-echo [3] Voltar ao Menu
-set /p dxopt="Opcao: "
-if "%dxopt%"=="1" goto :SELECIONAR_DISCO_INST
-if "%dxopt%"=="2" goto :SELECIONAR_DISCO_REM
-if "%dxopt%"=="3" goto :MENU
-goto :GERENCIAR_DXVK
 
 :SELECIONAR_DISCO_INST
 set /p DISCO="Digite a letra do disco onde esta o jogo (ex: C): "
