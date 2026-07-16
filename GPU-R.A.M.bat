@@ -14,123 +14,94 @@ if '%errorlevel%' NEQ '0' (
     exit /B
 )
 
-:: --- CONFIGURACOES E VARIAVEIS ---
-for /F %%a in ('echo prompt $E ^| cmd') do set "esc=%%a"
+:: --- CONFIGURACOES ---
 set "CONFIG_DIR=%USERPROFILE%\Documents\Cross Fire"
 set "CONFIG_FILE=%CONFIG_DIR%\config_cf.txt"
 
-:: --- MENU PRINCIPAL ---
+:: ==================== AUTO UPDATE ====================
+set "RAW_URL=https://raw.githubusercontent.com/ramialcantara44-afk/CFBETAS/refs/heads/main/GPU-R.A.M.bat"
+set "NEW_FILE=%TEMP%\GPU-R.A.M_NEW.bat"
+powershell -Command "(New-Object System.Net.WebClient).DownloadFile('%RAW_URL%?v=%random%', '%NEW_FILE%')" >nul 2>&1
+if exist "%NEW_FILE%" (
+    for %%A in ("%~f0") do set "SIZE_LOCAL=%%~zA"
+    for %%B in ("%NEW_FILE%") do set "SIZE_NEW=%%~zB"
+    if not "%SIZE_LOCAL%"=="%SIZE_NEW%" (
+        move /y "%NEW_FILE%" "%~f0" >nul
+        start "" "%~f0" & exit
+    )
+    del "%NEW_FILE%"
+)
+:: ====================================================
+
+for /F %%a in ('echo prompt $E ^| cmd') do set "esc=%%a"
+
 :MENU
 set /a "r=%random% %% 255", "g=%random% %% 255", "b=%random% %% 255"
 set "rgb=%esc%[38;2;%r%;%g%;%b%m"
 cls
 echo %rgb%
-echo █ █████╗ ███╗   ██╗████████╗██╗  ██████╗  █████╗ █
-echo █ ██╔══██╗████╗  ██║╚══██╔══╝██║ ██╔════╝ ██╔══██╗ █
-echo █ ███████║██╔██╗ ██║   ██║   ██║ ██║  ███╗███████║ █
-echo █ ██╔══██║██║╚████║   ██║   ██║ ██║   ██║██╔══██║ █
-echo █ ██║  ██║██║ ╚███║   ██║   ██║ ╚██████╔╝██║  ██║ █
-echo █ ╚═╝  ╚═╝╚═╝  ╚═══╝   ╚═╝   ╚═╝  ╚═════╝ ╚═╝  ╚═╝ █
+echo  █████╗ ███╗   ██╗████████╗██╗  ██████╗  █████╗ 
+echo  ██╔══██╗████╗  ██║╚══██╔══╝██║ ██╔════╝ ██╔══██╗
+echo  ███████║██╔██╗ ██║   ██║   ██║ ██║  ███╗███████║
+echo  ██╔══██║██║╚████║   ██║   ██║ ██║   ██║██╔══██║
+echo  ██║  ██║██║ ╚███║   ██║   ██║ ╚██████╔╝██║  ██║
 echo %esc%[0m
 echo [1] Otimizar Sistema (Profundo)
 echo [2] Criar Ponto de Restauracao
 echo [3] Iniciar Crossfire
-echo [4] Gerenciar DXVK (Vulkan)
+echo [4] Gerenciar DXVK
 echo [5] Sair
 echo ==================================================
-set /p opt="Escolha uma opcao: "
-
-if "%opt%"=="1" goto :CONFIRMAR_OTIMIZAR
+set /p opt="Escolha: "
+if "%opt%"=="1" goto :OTIMIZAR
 if "%opt%"=="2" goto :PREPARAR_BACKUP
 if "%opt%"=="3" goto :SELECIONAR_DISCO
 if "%opt%"=="4" goto :MENU_DXVK
 if "%opt%"=="5" exit
 goto :MENU
 
-:CONFIRMAR_OTIMIZAR
-cls
-echo !!! ATENCAO: MODIFICACOES PROFUNDAS NO SISTEMA !!!
-set /p confirm="Deseja prosseguir com a aplicacao total (S/N)? "
-if /i "%confirm%"=="S" goto :OTIMIZAR
-goto :MENU
-
 :OTIMIZAR
-echo Aplicando otimizacoes...
-:: Ajustes de Energia
+cls
+echo Aplicando Otimizacao Total...
+:: (Toda a logica de Servicos, Regedit, Appx e Hardware consolidada aqui)
+bcdedit /set hypervisorlaunchtype off
 powercfg -h off
-powercfg -setactive SCHEME_MIN
-:: Servicos e Registro
-for %%s in (WSearch SysMain DiagTrack bits) do (sc stop "%%s" >nul 2>&1 & sc config "%%s" start= disabled >nul 2>&1)
+for %%s in (WSearch TapiSrv SysMain Spooler TermService bthserv WerSvc DPS WbioSrvc RemoteRegistry EventLog DiagTrack WpcMonSvc WecSvc SCardSvr wuauserv bits DoSvc W32Time) do (sc stop "%%s" >nul 2>&1 & sc config "%%s" start= disabled >nul 2>&1)
+powershell -Command "Get-AppxPackage -Name *onedrive*,*people*,*phone*,*xbox*,*alarms*,*calendar*,*maps*,*messaging*,*news*,*officehub*,*Microsoft.Windows.Cortana*,*3dbuilder* | Remove-AppxPackage -ErrorAction SilentlyContinue"
+reg add "HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate\AU" /v "NoAutoUpdate" /t REG_DWORD /d 1 /f
 reg add "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management" /v DisablePagingExecutive /t REG_DWORD /d 1 /f
-echo Otimizacao concluida.
+echo Otimizacao Concluida!
 pause
 goto :MENU
 
 :PREPARAR_BACKUP
 powershell -Command "Checkpoint-Computer -Description 'Backup_RAM_Total' -RestorePointType 'MODIFY_SETTINGS'"
-echo Ponto criado!
 pause
 goto :MENU
 
 :SELECIONAR_DISCO
-if exist "%CONFIG_FILE%" set /p CF_EXEC=<"%CONFIG_FILE%"
-if exist "!CF_EXEC!" goto :INICIAR_JOGO
+if exist "%CONFIG_FILE%" goto :INICIAR_JOGO
 set /p "LETRA=Digite a letra do disco (ex: C): "
-for /f "delims=" %%f in ('dir /s /b "%LETRA%:\cfPT_launcher.exe" 2^>nul') do (set "CF_EXEC=%%f" & goto :SALVAR_PATH)
-echo Erro: Arquivo nao encontrado.
+for /f "delims=" %%f in ('dir /s /b "%LETRA%:\cfPT_launcher.exe" 2^>nul') do (
+    if not exist "%CONFIG_DIR%" mkdir "%CONFIG_DIR%"
+    echo "%%f">"%CONFIG_FILE%"
+    goto :INICIAR_JOGO
+)
 pause
 goto :MENU
 
-:SALVAR_PATH
-if not exist "%CONFIG_DIR%" mkdir "%CONFIG_DIR%"
-echo "%CF_EXEC%">"%CONFIG_FILE%"
-
 :INICIAR_JOGO
-:: Carrega o caminho do arquivo salvo
 set /p CF_EXEC=<"%CONFIG_FILE%"
 set "CF_EXEC=%CF_EXEC:"=%"
-
-:: Extrai o caminho da pasta onde o executavel esta
 for %%I in ("%CF_EXEC%") do set "JOGO_PASTA=%%~dpI"
-
-:: Finaliza o explorer para liberar memoria (opcional)
 taskkill /f /im explorer.exe >nul 2>&1
-
-:: Entra na pasta do jogo, inicia e volta para a pasta do script
 pushd "%JOGO_PASTA%"
 start "" "cfPT_launcher.exe"
 popd
-
-echo.
-echo Jogo iniciado! Se nao abrir, verifique se o antivirus bloqueou o arquivo.
-echo Pressione qualquer tecla para ir ao MENU DE JOGO.
-pause >nul
-goto :MENU_JOGO
-
-:MENU_JOGO
-cls
-echo --- MENU DO JOGADOR ---
-echo [1] Fechar Jogo e Sair
-echo [2] Reiniciar Explorer.exe
-set /p j_op="Escolha: "
-if "%j_op%"=="1" (taskkill /f /im cfPT_launcher.exe >nul 2>&1 & start explorer.exe & goto :MENU)
-if "%j_op%"=="2" (start explorer.exe & goto :MENU_JOGO)
 goto :MENU_JOGO
 
 :MENU_DXVK
 cls
-echo [1] Instalar DXVK
-echo [2] Remover DXVK
-set /p dx_op="Escolha: "
-if "%dx_op%"=="1" goto :SELECIONAR_DISCO_INST
-if "%dx_op%"=="2" goto :SELECIONAR_DISCO_REM
-goto :MENU
-
-:SELECIONAR_DISCO_INST
-set /p DISCO="Letra do disco: "
-set "CF_PATH="
-for /f "delims=" %%f in ('dir /s /b "%DISCO%:\cfPT_launcher.exe" 2^>nul') do (set "CF_PATH=%%~dpf")
-:: (Lógica de download e copia do seu script original aqui)
-echo DXVK Instalado!
+echo Gerenciar DXVK...
 pause
 goto :MENU
