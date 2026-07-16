@@ -131,10 +131,14 @@ echo "%CF_EXEC%">"%CONFIG_FILE%"
 set /p CF_EXEC=<"%CONFIG_FILE%"
 set "CF_EXEC=!CF_EXEC:"=!"
 for %%I in ("%CF_EXEC%") do set "JOGO_PASTA=%%~dpI"
+
+:: Usamos o 'start /b' ou apenas 'start ""' e forçamos o redirecionamento para o menu
 echo Iniciando jogo...
 pushd "%JOGO_PASTA%"
 start "" "cfPT_launcher.exe"
 popd
+
+:: O comando abaixo garante que, após abrir o jogo, você seja levado ao menu de controle
 goto :MENU_JOGO
 
 :GERENCIAR_DXVK
