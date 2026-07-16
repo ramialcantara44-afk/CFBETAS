@@ -93,17 +93,27 @@ goto :MENU
 
 :INICIAR_JOGO
 echo Iniciando jogo...
-:: O comando 'for' remove espaços extras ou caracteres de nova linha do caminho salvo
-for /f "usebackq tokens=* delims=" %%A in ("%CONFIG_FILE%") do set "PATH_EXEC=%%A"
+:: Remove espaços do caminho salvo no arquivo
+for /f "usebackq tokens=* delims=" %%A in ("%CONFIG_FILE%") do set "PATH_EXEC=%%~fA"
 
-if exist "%PATH_EXEC%" (
-    start "" "%PATH_EXEC%"
-) else (
-    echo ERRO: O caminho salvo nao e valido: "%PATH_EXEC%"
+:: Verifica se o arquivo realmente existe
+if not exist "%PATH_EXEC%" (
+    echo [ERRO] O caminho salvo nao existe: "%PATH_EXEC%" 
     del "%CONFIG_FILE%"
     pause
     goto :MENU
 )
+
+:: Execução direta com tratamento de pasta
+set "FOLDER=%~dpA"
+echo Indo para a pasta: "%FOLDER%"
+cd /d "%FOLDER%"
+echo Executando o arquivo...
+start "" "cfPT_launcher.exe"
+
+:: Pausa para ver o que aconteceu antes de ir para o menu
+echo Pressione qualquer tecla para retornar ao menu.
+pause
 goto :MENU_JOGO
 
 :GERENCIAR_DXVK
