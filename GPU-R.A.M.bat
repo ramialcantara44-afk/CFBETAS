@@ -91,50 +91,19 @@ powershell -Command "Checkpoint-Computer -Description 'GPU-RAM_Otimizacao' -Rest
 pause
 goto :MENU
 
-:ABRIR_CF
-cls
-set "CONFIG_DIR=%USERPROFILE%\Documents\Cross Fire"
-set "CONFIG_FILE=%CONFIG_DIR%\config_cf.txt"
+:INICIAR_JOGO
+echo Iniciando jogo...
+:: O comando 'for' remove espaços extras ou caracteres de nova linha do caminho salvo
+for /f "usebackq tokens=* delims=" %%A in ("%CONFIG_FILE%") do set "PATH_EXEC=%%A"
 
-:: Verifica se já existe um caminho salvo
-if exist "%CONFIG_FILE%" (
-    set /p CF_EXEC=<"%CONFIG_FILE%"
-    if exist "!CF_EXEC!" goto :INICIAR_JOGO
-)
-
-:: Se não existe ou o arquivo não foi encontrado, solicita o disco
-echo.
-echo [!] Arquivo nao configurado ou nao encontrado.
-set /p "LETRA=Digite a letra do disco onde esta o Crossfire (ex: C): "
-echo.
-echo Buscando cfPT_launcher.exe no disco %LETRA%... Isso pode demorar um pouco.
-
-:: Varredura profunda usando DIR para maior compatibilidade
-set "CF_EXEC="
-for /f "delims=" %%f in ('dir /s /b "%LETRA%:\cfPT_launcher.exe" 2^>nul') do (
-    set "CF_EXEC=%%f"
-)
-
-if not defined CF_EXEC (
-    echo.
-    echo ERRO: Arquivo 'cfPT_launcher.exe' nao encontrado no disco %LETRA%:.
+if exist "%PATH_EXEC%" (
+    start "" "%PATH_EXEC%"
+) else (
+    echo ERRO: O caminho salvo nao e valido: "%PATH_EXEC%"
+    del "%CONFIG_FILE%"
     pause
     goto :MENU
 )
-
-:: Cria a pasta de configuração se não existir e salva o caminho
-if not exist "%CONFIG_DIR%" mkdir "%CONFIG_DIR%"
-echo %CF_EXEC%>%CONFIG_FILE%
-
-:INICIAR_JOGO
-echo Iniciando jogo...
-start "" "%CF_EXEC%"
-goto :MENU_JOGO
-
-:INICIAR_JOGO
-:: Executa o jogo usando o caminho salvo/encontrado
-echo Iniciando jogo...
-start "" "%CF_EXEC%"
 goto :MENU_JOGO
 
 :GERENCIAR_DXVK
