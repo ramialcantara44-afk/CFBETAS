@@ -105,32 +105,36 @@ if exist "%CONFIG_FILE%" (
 )
 
 if not defined CF_PATH (
-    :: Limpa a variavel antes de pedir
     set "DISCO="
-    set /p DISCO="Disco nao configurado. Digite apenas a letra do disco (ex: C): "
-    
-    :: Remove possiveis espacos e garante que temos apenas a letra
+    set /p DISCO="Digite apenas a letra do disco (ex: C): "
     set "DISCO=%DISCO:~0,1%"
     
-    echo Buscando cfPT_launcher.exe no disco %DISCO%...
-    for /f "delims=" %%f in ('dir /s /b "%DISCO%:\cfPT_launcher.exe" 2^>nul') do (
+    echo Buscando o jogo no disco %DISCO%... aguarde...
+    
+    :: Esta versao busca por qualquer arquivo que contenha 'cfPT' no nome
+    :: O '2^>nul' esconde erros de acesso a pastas do sistema
+    for /f "delims=" %%f in ('dir /s /b "%DISCO%:\*cfPT*.exe" 2^>nul') do (
         set "CF_PATH=%%~dpf"
+        set "CF_EXEC=%%f"
     )
     
-    if not defined CF_PATH (
+    if not defined CF_EXEC (
         echo.
-        echo Arquivo cfPT_launcher.exe nao encontrado no disco %DISCO%!
-        echo Verifique se o jogo esta instalado neste disco.
+        echo ERRO: Arquivo com 'cfPT' no nome nao foi encontrado no disco %DISCO%.
+        echo Dica: Verifique se o jogo esta realmente neste disco ou se o nome esta correto.
         pause
         goto :MENU
     )
     
+    echo Caminho encontrado: %CF_PATH%
     echo %CF_PATH%>%CONFIG_FILE%
 )
 
-echo Iniciando jogo a partir de: %CF_PATH%
+:: Se o caminho ja existe, tentamos iniciar
+echo Iniciando jogo...
 pushd "%CF_PATH%"
-start "" "cfPT_launcher.exe"
+:: Procura o executavel dentro da pasta encontrada
+for %%e in ("%CF_PATH%*cfPT*.exe") do start "" "%%e"
 popd
 goto :MENU_JOGO
 
