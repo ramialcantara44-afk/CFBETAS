@@ -96,39 +96,80 @@ cls
 set "CONFIG_DIR=%USERPROFILE%\Documents\Cross Fire"
 set "CONFIG_FILE=%CONFIG_DIR%\config_cf.txt"
 
-:: Verifica se o arquivo de configuração existe e é válido
+:: Verifica se o arquivo de configuração existe e tenta ler o caminho
 if exist "%CONFIG_FILE%" (
     set /p CF_EXEC=<"%CONFIG_FILE%"
+    :: Remove aspas existentes para padronizar
+    set "CF_EXEC=%CF_EXEC:"=%"
     if exist "!CF_EXEC!" goto :INICIAR_JOGO
 )
 
-:: Se não encontrado, pede o disco e busca novamente
+:: Caso nao exista ou nao seja valido, solicita a busca
 echo.
-set /p "LETRA=Disco do jogo nao configurado. Digite a letra do disco (ex: C): "
-echo Buscando cfPT_launcher.exe... Aguarde.
+set /p "LETRA=Configuracao nao encontrada. Digite a letra do disco (ex: C): "
+echo Buscando cfPT_launcher.exe no disco %LETRA%... Aguarde...
 
 set "CF_EXEC="
-for /f "delims=" %%f in ('dir /s /b "%LETRA%:\cfPT_launcher.exe" 2^>nul') do (
+for /f "delims=" %%f in ('powershell -Command "Get-ChildItem -Path '%LETRA%:\' -Filter 'cfPT_launcher.exe' -Recurse -ErrorAction SilentlyContinue | Select-Object -ExpandProperty FullName -First 1"') do (
     set "CF_EXEC=%%f"
 )
 
 if not defined CF_EXEC (
-    echo Arquivo nao encontrado! Pressione qualquer tecla para voltar.
-    pause >nul
+    echo.
+    echo ERRO: Arquivo 'cfPT_launcher.exe' nao encontrado no disco %LETRA%:.
+    pause
     goto :MENU
 )
 
+:: Salva o caminho com aspas para evitar erros com espacos 
 if not exist "%CONFIG_DIR%" mkdir "%CONFIG_DIR%"
-echo %CF_EXEC%>%CONFIG_FILE%
+echo "%CF_EXEC%">"%CONFIG_FILE%"
+
+:ABRIR_CF
+cls
+set "CONFIG_DIR=%USERPROFILE%\Documents\Cross Fire"
+set "CONFIG_FILE=%CONFIG_DIR%\config_cf.txt"
+
+:: Se a configuracao existe, le o caminho e vai direto para o inicio
+if exist "%CONFIG_FILE%" (
+    set /p CF_EXEC=<"%CONFIG_FILE%"
+    set "CF_EXEC=%CF_EXEC:"=%"
+    if exist "!CF_EXEC!" goto :INICIAR_JOGO
+)
+
+:: Se nao existir, pede a letra e faz a busca
+echo.
+set /p "LETRA=Configuracao nao encontrada. Digite a letra do disco (ex: C): "
+echo Buscando cfPT_launcher.exe no disco %LETRA%... Aguarde...
+
+set "CF_EXEC="
+for /f "delims=" %%f in ('powershell -Command "Get-ChildItem -Path '%LETRA%:\' -Filter 'cfPT_launcher.exe' -Recurse -ErrorAction SilentlyContinue | Select-Object -ExpandProperty FullName -First 1"') do (
+    set "CF_EXEC=%%f"
+)
+
+if not defined CF_EXEC (
+    echo.
+    echo ERRO: Arquivo nao encontrado!
+    pause
+    goto :MENU
+)
+
+:: Salva o caminho formatado corretamente
+if not exist "%CONFIG_DIR%" mkdir "%CONFIG_DIR%"
+echo %CF_EXEC%>"%CONFIG_FILE%"
 
 :INICIAR_JOGO
-echo Iniciando: "%CF_EXEC%"
+:: Garante que a variavel esteja carregada e sem aspas extras antes de usar
+set /p CF_EXEC=<"%CONFIG_FILE%"
+set "CF_EXEC=%CF_EXEC:"=%"
+
+echo Iniciando o jogo...
 start "" "%CF_EXEC%"
+
 echo.
 echo Jogo iniciado. Pressione qualquer tecla para voltar ao menu.
 pause >nul
 goto :MENU
-
 :GERENCIAR_DXVK
 cls
 echo [DXVK] O que deseja fazer?
