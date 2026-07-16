@@ -106,25 +106,24 @@ if exist "%CONFIG_FILE%" (
 
 if not defined CF_PATH (
     echo.
-    set "DISCO="
-    set /p DISCO="Digite a letra do disco onde o jogo esta (Apenas uma letra, ex: C): "
+    set /p "DISCO=Digite a letra do disco (ex: C): "
     
-    :: Remove qualquer caractere extra, mantendo apenas a letra
-    set "DISCO=%DISCO:~0,1%"
+    echo Buscando o jogo no disco %DISCO%... aguarde...
     
-    echo.
-    echo Buscando o jogo no disco %DISCO%... aguarde alguns segundos...
-    
-    :: Utilizamos um comando mais direto para forçar a busca
-    for /f "delims=" %%f in ('dir /s /b "%DISCO%:\*cfPT*.exe" 2^>nul') do (
+    :: Forçamos a busca procurando especificamente pelo launcher que você citou
+    for /f "delims=" %%f in ('dir /s /b "%DISCO%:\cfPT_launcher.exe" 2^>nul') do (
         set "CF_PATH=%%~dpf"
         set "CF_EXEC=%%f"
     )
     
     if not defined CF_EXEC (
         echo.
-        echo ERRO: Arquivo com 'cfPT' no nome nao foi encontrado no disco %DISCO%.
-        echo Verifique se o jogo esta instalado neste disco ou se o nome do arquivo mudou.
+        echo ERRO: O arquivo 'cfPT_launcher.exe' nao foi encontrado no disco %DISCO%.
+        echo.
+        echo Tente buscar manualmente no seu PC:
+        echo 1. Abra o 'Meu Computador'.
+        echo 2. Digite 'cfPT_launcher' na barra de pesquisa.
+        echo 3. Veja se o nome e exatamente 'cfPT_launcher.exe'.
         pause
         goto :MENU
     )
@@ -133,11 +132,8 @@ if not defined CF_PATH (
     echo %CF_PATH%>%CONFIG_FILE%
 )
 
-echo Iniciando jogo a partir de: %CF_PATH%
-pushd "%CF_PATH%"
-:: Executa o arquivo encontrado
-start "" "%CF_EXEC%"
-popd
+echo Iniciando jogo...
+start "" "%CF_PATH%cfPT_launcher.exe"
 goto :MENU_JOGO
 
 :GERENCIAR_DXVK
