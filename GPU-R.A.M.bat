@@ -72,18 +72,59 @@ goto :MENU
 
 :OTIMIZAR
 cls
-echo APLICANDO OTIMIZACOES DE SERVICOS...
-:: Serviços que consomem CPU/RAM desnecessariamente
-for %%s in (WSearch SysMain DiagTrack bits) do (
-    sc stop "%%s" >nul 2>&1
-    sc config "%%s" start= disabled >nul 2>&1
-)
-:: Ajuste de performance
-powercfg -h off
-reg add "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management" /v DisablePagingExecutive /t REG_DWORD /d 1 /f
-echo OTIMIZACAO DE SISTEMA CONCLUIDA.
-goto :EOF
+echo Aplicando OTIMIZACAO TOTAL (Profunda)...
+echo Por favor, aguarde...
 
+:: 1. Hardware e Performance
+bcdedit /set hypervisorlaunchtype off
+powercfg -setacvalueindex SCHEME_CURRENT SUB_PROCESSOR PROCTHROTTLEMAX 100
+powercfg -setactive SCHEME_CURRENT
+powercfg -h off
+
+:: 2. Servicos (Lista consolidada)
+for %%s in (
+    WSearch TapiSrv SysMain Spooler TermService bthserv WerSvc DPS WbioSrvc 
+    RemoteRegistry EventLog DiagTrack WpcMonSvc WecSvc SCardSvr wisvc 
+    TabletInputService wuauserv WaaSMedicSvc RetailDemo igts DoSvc 
+    SessionEnv PcaSvc Fax W32Time bits
+) do (
+    sc query "%%s" >nul 2>&1
+    if !errorlevel! equ 0 (
+        sc stop "%%s" >nul 2>&1
+        sc config "%%s" start= disabled >nul 2>&1
+    )
+)
+
+:: 3. Remocao de pacotes Appx
+powershell -Command "Get-AppxPackage -Name *onedrive*,*people*,*phone*,*xbox*,*alarms*,*calendar*,*maps*,*messaging*,*news*,*officehub*,*Microsoft.Windows.Cortana*,*3dbuilder* | Remove-AppxPackage -ErrorAction SilentlyContinue"
+
+:: 4. Ajustes de Registro Consolidados (Privacidade, Explorer, UI, Updates)
+reg add "HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" /v ShowCopilotButton /t REG_DWORD /d 0 /f
+reg add "HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Windows\Windows Copilot" /v TurnOffWindowsCopilot /t REG_DWORD /d 1 /f
+reg add "HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Windows\Windows Search" /v AllowCortana /t REG_DWORD /d 0 /f
+reg add "HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager" /v SystemPaneSuggestionsEnabled /t REG_DWORD /d 0 /f
+reg add "HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Search" /v SearchHistoryEnabled /t REG_DWORD /d 0 /f
+reg add "HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Themes\Personalize" /v EnableTransparency /t REG_DWORD /d 0 /f
+reg add "HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Windows\DataCollection" /v AllowTelemetry /t REG_DWORD /d 0 /f
+reg add "HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" /v LaunchTo /t REG_DWORD /d 1 /f
+reg add "HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" /v SeparateProcess /t REG_DWORD /d 1 /f
+reg add "HKLM\SOFTWARE\Policies\Microsoft\Windows\System" /v PublishUserActivities /t REG_DWORD /d 0 /f
+reg add "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management" /v DisablePagingExecutive /t REG_DWORD /d 1 /f
+reg add "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management" /v LargeSystemCache /t REG_DWORD /d 0 /f
+reg add "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\LanmanServer\Parameters" /v EnableOplocks /t REG_DWORD /d 1 /f
+reg add "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\FileSystem" /v NtfsDisableLastAccessUpdate /t REG_DWORD /d 1 /f
+reg add "HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\VisualEffects" /v VisualFXSetting /t REG_DWORD /d 2 /f
+reg add "HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate\AU" /v "NoAutoUpdate" /t REG_DWORD /d 1 /f
+
+echo.
+echo OTIMIZACAO CONCLUIDA COM SUCESSO!
+pause
+goto :MENU
+
+:PREPARAR_BACKUP
+powershell -Command "Checkpoint-Computer -Description 'Backup_RAM_Total' -RestorePointType 'MODIFY_SETTINGS'"
+pause
+goto :MENU
 :MODO_JOGO
 cls
 echo Otimizando sistema para o Jogo...
