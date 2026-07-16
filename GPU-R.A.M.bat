@@ -93,23 +93,24 @@ goto :MENU
 
 :ABRIR_CF
 cls
+:: Define onde salvar a configuração (na pasta Documentos do usuário)
 set "CONFIG_DIR=%USERPROFILE%\Documents\Cross Fire"
 set "CONFIG_FILE=%CONFIG_DIR%\config_cf.txt"
 
 if not exist "%CONFIG_DIR%" mkdir "%CONFIG_DIR%"
 
-:: Verifica se já existe um caminho salvo anteriormente
+:: Se já tiver configurado antes, ele pula direto para o jogo
 if exist "%CONFIG_FILE%" (
-    set /p CF_PATH=<"%CONFIG_FILE%"
+    set /p CF_EXEC=<"%CONFIG_FILE%"
     goto :INICIAR_JOGO
 )
 
 echo.
-set /p "LETRA=Digite a letra do disco para varredura (ex: C): "
+set /p "LETRA=Digite a letra do disco (ex: C): "
 echo.
-echo Varrendo o disco %LETRA%:... Isso pode levar alguns segundos. Aguarde...
+echo Buscando cfPT_launcher.exe no disco %LETRA%... Aguarde...
 
-:: Usa PowerShell para localizar o executável de forma precisa e rápida
+:: Varredura via PowerShell (mais eficiente e imune a erros de permissão)
 for /f "delims=" %%i in ('powershell -Command "Get-ChildItem -Path '%LETRA%:\' -Filter 'cfPT_launcher.exe' -Recurse -ErrorAction SilentlyContinue | Select-Object -ExpandProperty FullName -First 1"') do (
     set "CF_EXEC=%%i"
 )
@@ -117,20 +118,17 @@ for /f "delims=" %%i in ('powershell -Command "Get-ChildItem -Path '%LETRA%:\' -
 if not defined CF_EXEC (
     echo.
     echo ERRO: Arquivo 'cfPT_launcher.exe' nao encontrado no disco %LETRA%:.
-    echo Certifique-se de que o jogo esta instalado e a letra do disco esta correta.
     pause
     goto :MENU
 )
 
-:: Extrai apenas o caminho da pasta a partir do caminho completo do arquivo
-for %%f in ("%CF_EXEC%") do set "CF_PATH=%%~dpf"
-
-echo %CF_PATH%>%CONFIG_FILE%
-echo Caminho encontrado e salvo!
+:: Salva o caminho encontrado para nao precisar buscar na próxima vez
+echo %CF_EXEC%>%CONFIG_FILE%
 
 :INICIAR_JOGO
+:: Executa o jogo usando o caminho salvo/encontrado
 echo Iniciando jogo...
-start "" "%CF_PATH%cfPT_launcher.exe"
+start "" "%CF_EXEC%"
 goto :MENU_JOGO
 
 :GERENCIAR_DXVK
