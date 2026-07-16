@@ -118,19 +118,18 @@ cls
 set "CONFIG_DIR=%USERPROFILE%\Documents\Cross Fire"
 set "CONFIG_FILE=%CONFIG_DIR%\config_cf.txt"
 
-:: Tenta ler o arquivo de configuracao se existir
+:: Se a configuracao existe, le o caminho e vai direto para a tela de jogo
 if exist "%CONFIG_FILE%" (
     set /p CF_EXEC=<"%CONFIG_FILE%"
     set "CF_EXEC=!CF_EXEC:"=!"
     if exist "!CF_EXEC!" goto :INICIAR_JOGO
 )
 
-:: Se nao existe ou o caminho esta invalido, obriga a selecionar o disco
-echo Configuracao nao encontrada ou caminho invalido.
-set /p "LETRA=Digite apenas a letra do disco onde esta o jogo (ex: C): "
-
+:: Caso nao exista, solicita a busca
 echo.
-echo Buscando cfPT_launcher.exe no disco %LETRA%... Aguarde, pode demorar um pouco...
+set /p "LETRA=Configuracao nao encontrada. Digite a letra do disco (ex: C): "
+echo Buscando cfPT_launcher.exe no disco %LETRA%... Aguarde...
+
 set "CF_EXEC="
 for /f "delims=" %%f in ('dir /s /b "%LETRA%:\cfPT_launcher.exe" 2^>nul') do (
     set "CF_EXEC=%%f"
@@ -138,29 +137,61 @@ for /f "delims=" %%f in ('dir /s /b "%LETRA%:\cfPT_launcher.exe" 2^>nul') do (
 
 if not defined CF_EXEC (
     echo.
-    echo ERRO: Arquivo 'cfPT_launcher.exe' nao encontrado no disco %LETRA%:.
+    echo ERRO: Arquivo nao encontrado no disco %LETRA%:.
     pause
     goto :MENU
 )
 
-:: Salva o caminho encontrado
 if not exist "%CONFIG_DIR%" mkdir "%CONFIG_DIR%"
 echo "!CF_EXEC!">"%CONFIG_FILE%"
 
 :INICIAR_JOGO
+:: Carrega o caminho
 set /p CF_EXEC=<"%CONFIG_FILE%"
 set "CF_EXEC=!CF_EXEC:"=!"
 
-echo Iniciando o jogo...
-:: Extrai o diretorio do executavel
-for %%I in ("%CF_EXEC%") do set "JOGO_PASTA=%%~dpI"
+echo Iniciando o jogo e abrindo o Painel de Otimizacao...
 
-pushd "%JOGO_PASTA%"
-start "" "cfPT_launcher.exe"
-popd
+:: AQUI ESTA O SEGREDO: 
+:: O comando 'start' abaixo abre o seu próprio script em uma NOVA JANELA 
+:: especificamente no menu de jogo, sem fechar a atual.
+start "PAINEL DE OTIMIZACAO" "%~f0" :MENU_JOGO
 
-:: Esta linha garante que ele va para o menu de jogo e nao feche
-goto :MENU_JOGO
+:: Após abrir o painel, a janela original pode fechar ou voltar ao menu principal
+exit
+
+:MENU_JOGO
+:: Esta parte so sera executada na nova janela que abrimos acima
+cls
+:LOOP_MENU_JOGO
+set /a "r=%random% %% 255", "g=%random% %% 255", "b=%random% %% 255"
+set "rgb=%esc%[38;2;%r%;%g%;%b%m"
+echo %rgb%--- MENU DO JOGADOR (ATIVO) ---%reset%
+echo [1] Limpar Memoria RAM
+echo [2] Fechar Jogo e Sair
+echo [3] Gerenciar Explorer
+echo.
+set /p j_op="Escolha: "
+
+if "%j_op%"=="1" (
+    taskkill /f /im chrome.exe /im msedge.exe /im discord.exe /im steam.exe >nul 2>&1
+    echo Limpeza concluida!
+    timeout /t 2 >nul
+    goto :LOOP_MENU_JOGO
+)
+if "%j_op%"=="2" (
+    taskkill /f /im cfPT_launcher.exe >nul 2>&1
+    start "" explorer.exe
+    exit
+)
+if "%j_op%"=="3" (
+    taskkill /f /im explorer.exe >nul 2>&1
+    pause
+    start "" explorer.exe
+    goto :LOOP_MENU_JOGO
+)
+goto :LOOP_MENU_JOGO
+
 :GERENCIAR_DXVK
 echo [1] Instalar DXVK | [2] Remover DXVK
 set /p sub_op="Opcao: "
