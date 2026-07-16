@@ -114,43 +114,53 @@ goto :MENU
 
 :: ==================== JOGO E DXVK ====================
 :ABRIR_CF
+cls
 set "CONFIG_DIR=%USERPROFILE%\Documents\Cross Fire"
 set "CONFIG_FILE=%CONFIG_DIR%\config_cf.txt"
 
+:: Tenta ler o arquivo de configuracao se existir
 if exist "%CONFIG_FILE%" (
     set /p CF_EXEC=<"%CONFIG_FILE%"
     set "CF_EXEC=!CF_EXEC:"=!"
     if exist "!CF_EXEC!" goto :INICIAR_JOGO
 )
 
-set /p "LETRA=Configuracao nao encontrada. Digite a letra do disco (ex: C): "
-for /f "delims=" %%f in ('powershell -Command "Get-ChildItem -Path '%LETRA%:\' -Filter 'cfPT_launcher.exe' -Recurse -ErrorAction SilentlyContinue | Select-Object -ExpandProperty FullName -First 1"') do (set "CF_EXEC=%%f")
+:: Se nao existe ou o caminho esta invalido, obriga a selecionar o disco
+echo Configuracao nao encontrada ou caminho invalido.
+set /p "LETRA=Digite apenas a letra do disco onde esta o jogo (ex: C): "
+
+echo.
+echo Buscando cfPT_launcher.exe no disco %LETRA%... Aguarde, pode demorar um pouco...
+set "CF_EXEC="
+for /f "delims=" %%f in ('dir /s /b "%LETRA%:\cfPT_launcher.exe" 2^>nul') do (
+    set "CF_EXEC=%%f"
+)
 
 if not defined CF_EXEC (
-    echo Arquivo nao encontrado!
+    echo.
+    echo ERRO: Arquivo 'cfPT_launcher.exe' nao encontrado no disco %LETRA%:.
     pause
     goto :MENU
 )
 
+:: Salva o caminho encontrado
 if not exist "%CONFIG_DIR%" mkdir "%CONFIG_DIR%"
-echo "%CF_EXEC%">"%CONFIG_FILE%"
+echo "!CF_EXEC!">"%CONFIG_FILE%"
 
 :INICIAR_JOGO
-:: Limpa e carrega o caminho novamente para garantir
 set /p CF_EXEC=<"%CONFIG_FILE%"
 set "CF_EXEC=!CF_EXEC:"=!"
 
 echo Iniciando o jogo...
-start "" "%CF_EXEC%"
+:: Extrai o diretorio do executavel
+for %%I in ("%CF_EXEC%") do set "JOGO_PASTA=%%~dpI"
 
-:: ESTA PARTE E CRUCIAL:
-:: O comando 'timeout' da um tempo para o jogo carregar 
-:: antes de exibir o menu, evitando que a janela feche.
-timeout /t 5 >nul
+pushd "%JOGO_PASTA%"
+start "" "cfPT_launcher.exe"
+popd
 
-:: Redireciona obrigatoriamente para o menu do jogador
+:: Esta linha garante que ele va para o menu de jogo e nao feche
 goto :MENU_JOGO
-
 :GERENCIAR_DXVK
 echo [1] Instalar DXVK | [2] Remover DXVK
 set /p sub_op="Opcao: "
