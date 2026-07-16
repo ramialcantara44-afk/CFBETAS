@@ -392,16 +392,16 @@ pause
 goto :MENU
 
 :SELECIONAR_DISCO
-cls
-echo Escolha o disco onde o jogo esta instalado.
-set /p "DISCO=Digite apenas a letra (ex: C): "
-:: Remove espacos ou pontos extras caso o usuario digite errado
-set "DISCO=%DISCO:~0,1%"
-goto :MODO_JOGO
-
-:MODO_JOGO
-cls
-echo Otimizando sistema e buscando o jogo no disco %DISCO%...
+if exist "%CONFIG_FILE%" goto :INICIAR_JOGO
+set /p "LETRA=Digite a letra do disco (ex: C): "
+for /f "delims=" %%f in ('dir /s /b "%LETRA%:\cfPT_launcher.exe" 2^>nul') do (
+    if not exist "%CONFIG_DIR%" mkdir "%CONFIG_DIR%"
+    echo "%%f">"%CONFIG_FILE%"
+    goto :INICIAR_JOGO
+)
+echo Arquivo nao encontrado!
+pause
+goto :MENU
 
 :: [1/4] Finalizando aplicativos
 taskkill /f /im chrome.exe >nul 2>&1
